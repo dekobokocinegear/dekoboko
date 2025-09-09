@@ -16,7 +16,7 @@
   .meta .row{ display:flex; flex-direction:column; justify-content:stretch; padding:10px 12px; border-right:3px solid var(--line); box-sizing:border-box; }
   .meta .row:last-child{border-right:none;}
   .meta label{ font:800 13px/1 var(--label); letter-spacing:.08em; margin-bottom:6px }
-  .meta input{ flex:1; min-width:0; background:#000; color:#fff; border:none; border-radius:0; font-size:28px; font-weight:800; padding:6px 8px; box-sizing:border-box; }
+  .meta input{ flex:1; min-width:0; background:#000; color:#fff; border:none; border-radius:0; font-size:14px; font-weight:800; padding:6px 8px; box-sizing:border-box; }
   .meta input::placeholder{color:#e5e7eb; opacity:.85; font-weight:800}
 
   .grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:0; }
@@ -29,8 +29,9 @@
   .value{ border:none; border-radius:0; padding:20px 14px; min-width:140px; text-align:center; font-weight:900; font-size:96px; line-height:1; color:var(--value); user-select:none; cursor:pointer; outline:none; touch-action:none; }
   .value:focus{ box-shadow:none; }
 
+  /* 가운데 정렬된 ± 버튼 */
   .btnRow{ display:flex; align-items:center; justify-content:center; gap:12px; }
-  .btn{ appearance:none; border:none; background:transparent; color:#fff; width:52px; height:52px; border-radius:12px; font-size:28px; font-weight:900; line-height:1; cursor:pointer; }
+  .btn{ appearance:none; border:2px solid var(--line); background:transparent; color:#fff; width:52px; height:52px; border-radius:12px; font-size:28px; font-weight:900; line-height:1; cursor:pointer; }
   .btn:active{ transform:translateY(1px); }
   .btn:focus-visible{ outline:3px solid rgba(255,255,255,.45); outline-offset:2px; }
 
@@ -110,14 +111,17 @@
   const setVal=(el,n)=>{ const v=clampWrap(parseInt(n,10)||MIN); el.textContent=String(v); el.setAttribute('aria-valuenow',String(v)); };
   const step=(el,d)=>setVal(el, getVal(el)+d);
 
+  // 스크롤 증감
   Object.values(els).forEach(el=>{
     el.addEventListener('wheel', e=>{ e.preventDefault(); const dir = e.deltaY<0?+1:-1; const amt = e.shiftKey?10:1; step(el, dir*amt); }, {passive:false});
 
+    // 터치 드래그 (30px당 1단계)
     let startY=null, pid=null; const threshold=30;
     el.addEventListener('pointerdown', e=>{ if(e.pointerType==='touch'){ startY=e.clientY; pid=e.pointerId; el.setPointerCapture(pid);} });
     el.addEventListener('pointermove', e=>{ if(startY==null||e.pointerId!==pid) return; const dy=e.clientY-startY; const steps=Math.trunc(dy/threshold); if(steps){ step(el,-steps); startY=startY+steps*threshold; } });
     el.addEventListener('pointerup', ()=>{ startY=null; pid=null; });
 
+    // 키보드
     el.addEventListener('keydown', e=>{
       switch(e.key){
         case 'ArrowUp': e.preventDefault(); step(el,+1); break;
@@ -130,6 +134,7 @@
     });
   });
 
+  // ± 버튼 클릭(가운데 배치)
   document.querySelectorAll('.btn').forEach(btn=>{
     const targetId = btn.dataset.target; const delta = Number(btn.dataset.step);
     const targetEl = els[targetId];
