@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>웹 슬레이트 (Scene / Cut / Take) – Dark (Scroll)</title>
+<style>
+  :root{ --line:#fff; --board:#000; --label:#fff; --value:#fff; }
+  body{margin:0; background:#000; color:#fff;
+    font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,Helvetica,Arial,sans-serif}
+  .wrap{min-height:100svh; display:grid; place-items:center; padding:24px}
+  .slate{ background:var(--board); width:min(920px, 94vw); border-radius:12px; box-shadow:0 12px 40px rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); overflow:hidden; }
+  .top{ padding:18px 22px 12px; border-bottom:3px solid var(--line); font-weight:800; color:var(--label); letter-spacing:.02em; }
+
+  .meta{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:0; border-bottom:3px solid var(--line); }
+  .meta .row{ display:flex; flex-direction:column; justify-content:stretch; padding:10px 12px; border-right:3px solid var(--line); box-sizing:border-box; }
+  .meta .row:last-child{border-right:none;}
+  .meta label{ font:800 13px/1 var(--label); letter-spacing:.08em; margin-bottom:6px }
+  .meta input{ flex:1; min-width:0; background:#000; color:#fff; border:none; border-radius:0; font-size:14px; font-weight:800; padding:6px 8px; box-sizing:border-box; }
+  .meta input::placeholder{color:#e5e7eb; opacity:.85; font-weight:800}
+
+  .grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:0; }
+  .cell{ padding:18px 18px 22px; border-right:3px solid var(--line); border-bottom:3px solid var(--line); min-height:148px; display:flex; flex-direction:column; gap:12px; align-items:center; }
+  .cell:last-child{border-right:none;}
+
+  .label{ font-size:28px; font-weight:900; color:var(--label); letter-spacing:.12em; }
+
+  .valueBox{ display:flex; flex-direction:column; align-items:center; gap:10px; }
+  .value{ border:none; border-radius:0; padding:20px 14px; min-width:140px; text-align:center; font-weight:900; font-size:96px; line-height:1; color:var(--value); user-select:none; cursor:pointer; outline:none; touch-action:none; }
+  .value:focus{ box-shadow:none; }
+
+  /* 가운데 정렬된 ± 버튼 */
+  .btnRow{ display:flex; align-items:center; justify-content:center; gap:12px; }
+  .btn{ appearance:none; border:none; background:transparent; color:#fff; width:52px; height:52px; border-radius:12px; font-size:28px; font-weight:900; line-height:1; cursor:pointer; }
+  .btn:active{ transform:translateY(1px); }
+  .btn:focus-visible{ outline:3px solid rgba(255,255,255,.45); outline-offset:2px; }
+
+  @media (max-width:700px){
+    .grid{ grid-template-columns: 1fr; }
+    .cell{ border-right:none; }
+    .label{ font-size:22px; }
+    .value{ font-size:72px; }
+    .meta{ grid-template-columns:1fr; }
+    .meta .row{ border-right:none; border-bottom:3px solid var(--line); }
+    .meta .row:last-child{ border-bottom:none; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="slate" aria-label="영화 촬영 슬레이트">
+      <div class="top">DEKOBOKO</div>
+
+      <div class="meta">
+        <div class="row">
+          <label for="director">DIRECTOR</label>
+          <input id="director" placeholder="감독 이름" />
+        </div>
+        <div class="row">
+          <label for="prod">PRODUCTION / NOTE</label>
+          <input id="prod" placeholder="작품명 또는 메모" />
+        </div>
+        <div class="row">
+          <label for="date">DATE</label>
+          <input id="date" type="date" />
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="cell">
+          <div class="label">SCENE</div>
+          <div class="valueBox">
+            <div class="value" id="scene" tabindex="0" role="spinbutton" aria-label="Scene number" aria-valuemin="1" aria-valuemax="100" aria-valuenow="1">1</div>
+            <div class="btnRow">
+              <button class="btn" data-target="scene" data-step="-1" aria-label="Scene 감소">−</button>
+              <button class="btn" data-target="scene" data-step="1" aria-label="Scene 증가">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="cell">
+          <div class="label">CUT</div>
+          <div class="valueBox">
+            <div class="value" id="take" tabindex="0" role="spinbutton" aria-label="Cut number" aria-valuemin="1" aria-valuemax="100" aria-valuenow="1">1</div>
+            <div class="btnRow">
+              <button class="btn" data-target="take" data-step="-1" aria-label="Cut 감소">−</button>
+              <button class="btn" data-target="take" data-step="1" aria-label="Cut 증가">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="cell">
+          <div class="label">TAKE</div>
+          <div class="valueBox">
+            <div class="value" id="roll" tabindex="0" role="spinbutton" aria-label="Take number" aria-valuemin="1" aria-valuemax="100" aria-valuenow="1">1</div>
+            <div class="btnRow">
+              <button class="btn" data-target="roll" data-step="-1" aria-label="Take 감소">−</button>
+              <button class="btn" data-target="roll" data-step="1" aria-label="Take 증가">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+<script>
+(function(){
+  const MIN=1, MAX=100;
+  const els={scene:document.getElementById('scene'), take:document.getElementById('take'), roll:document.getElementById('roll')};
+
+  const clampWrap=n=>n>MAX?MIN:n<MIN?MAX:n;
+  const getVal=el=>Number(el.textContent)||MIN;
+  const setVal=(el,n)=>{ const v=clampWrap(parseInt(n,10)||MIN); el.textContent=String(v); el.setAttribute('aria-valuenow',String(v)); };
+  const step=(el,d)=>setVal(el, getVal(el)+d);
+
+  // 스크롤 증감
+  Object.values(els).forEach(el=>{
+    el.addEventListener('wheel', e=>{ e.preventDefault(); const dir = e.deltaY<0?+1:-1; const amt = e.shiftKey?10:1; step(el, dir*amt); }, {passive:false});
+
+    // 터치 드래그 (30px당 1단계)
+    let startY=null, pid=null; const threshold=30;
+    el.addEventListener('pointerdown', e=>{ if(e.pointerType==='touch'){ startY=e.clientY; pid=e.pointerId; el.setPointerCapture(pid);} });
+    el.addEventListener('pointermove', e=>{ if(startY==null||e.pointerId!==pid) return; const dy=e.clientY-startY; const steps=Math.trunc(dy/threshold); if(steps){ step(el,-steps); startY=startY+steps*threshold; } });
+    el.addEventListener('pointerup', ()=>{ startY=null; pid=null; });
+
+    // 키보드
+    el.addEventListener('keydown', e=>{
+      switch(e.key){
+        case 'ArrowUp': e.preventDefault(); step(el,+1); break;
+        case 'ArrowDown': e.preventDefault(); step(el,-1); break;
+        case 'PageUp': e.preventDefault(); step(el,+10); break;
+        case 'PageDown': e.preventDefault(); step(el,-10); break;
+        case 'Home': e.preventDefault(); setVal(el,MIN); break;
+        case 'End': e.preventDefault(); setVal(el,MAX); break;
+      }
+    });
+  });
+
+  // ± 버튼 클릭(가운데 배치)
+  document.querySelectorAll('.btn').forEach(btn=>{
+    const targetId = btn.dataset.target; const delta = Number(btn.dataset.step);
+    const targetEl = els[targetId];
+    btn.addEventListener('click', ()=> step(targetEl, delta));
+  });
+})();
+</script>
+</body>
+</html>
