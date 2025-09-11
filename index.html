@@ -43,7 +43,7 @@
 .label{font-size:clamp(14px,2vw,20px);}
 .value{font-size:clamp(42px,8vw,96px); min-width:clamp(56px,8vw,120px); padding:clamp(4px,1vh,14px);} .valueBox{gap:clamp(6px,1.2vw,12px);} .btn{width:clamp(34px,7vw,64px); height:clamp(34px,7vw,64px); font-size:clamp(18px,4.5vw,36px);} }
 
-/* 스크롤 유도를 위한 보이지 않는 바닥 여유 영역 */ .scrollNudge{height:var(--scroll-nudge);} </style>
+/* 스크롤 유도를 위한 보이지 않는 바닥 여유 영역 / .scrollNudge{height:var(--scroll-nudge);} / ===== 표시 모드 토글: 화면고정(무스크롤) / 전체화면(스크롤) ===== */ .mode-fixed, .mode-fixed body{ overflow:hidden; } .mode-fixed .wrap{ min-height:100svh; height:100svh; } .mode-fixed .scrollNudge{ height:0 !important; } </style>
 
 </head>
 <body>
@@ -51,8 +51,8 @@
     <section class="slate" aria-label="영화 촬영 슬레이트">
       <div class="top">
         <a class="brandToggle" href="https://smartstore.naver.com/dekoboko" target="_blank" rel="noopener">DEKOBOKO</a>
-        <div class="controls">
-          <button class="smallBtn" id="resetCounts" aria-label="Scene/Cut/Take 값 초기화">↺ 리셋</button>
+        $1
+          <button class="smallBtn" id="modeToggle" aria-pressed="false" aria-label="표시 모드 토글">전체화면</button>
           <button class="themeBtn" id="themeToggle" aria-pressed="false" aria-label="흑백 반전 테마 토글">◐ 색상반전</button>
         </div>
       </div><div class="meta">
@@ -110,14 +110,49 @@
   const setVal=(el,n)=>{const v=clampWrap(parseInt(n,10)||MIN);el.textContent=String(v);el.setAttribute('aria-valuenow',String(v));save();};
   const step=(el,d)=>setVal(el,getVal(el)+d);
 
-  const KEY='slate-state-adaptive-stretch-v5';
+  const KEY='slate-state-adaptive-stretch-v6';
   function save(){
-    const data={scene:getVal(els.scene),cut:getVal(els.cut),take:getVal(els.take),director:els.director.value||'',prod:els.prod.value||'',date:els.date.value||'',theme:document.body.classList.contains('theme-invert')?'invert':'default'};
+    const data={
+      scene:getVal(els.scene),
+      cut:getVal(els.cut),
+      take:getVal(els.take),
+      director:els.director.value||'',
+      prod:els.prod.value||'',
+      date:els.date.value||'',
+      theme:document.body.classList.contains('theme-invert')?'invert':'default',
+      mode:document.documentElement.classList.contains('mode-fixed')?'fixed':'scroll'
+    };
+    try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){}
+  };
     try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){}
   }
   function load(){
     const raw=localStorage.getItem(KEY);
-    if(raw){try{const d=JSON.parse(raw);['scene','cut','take'].forEach(k=>setVal(els[k],d[k]||MIN));els.director.value=d.director||'';els.prod.value=d.prod||'';els.date.value=d.date||'';if(d.theme==='invert'){document.body.classList.add('theme-invert');els.themeBtn.setAttribute('aria-pressed','true');}}catch(e){}}
+    if(raw){
+      try{
+        const d=JSON.parse(raw);
+        ['scene','cut','take'].forEach(k=> setVal(els[k], d[k]??MIN));
+        els.director.value=d.director||'';
+        els.prod.value=d.prod||'';
+        els.date.value=d.date||'';
+        if(d.theme==='invert'){
+          document.body.classList.add('theme-invert');
+          els.themeBtn.setAttribute('aria-pressed','true');
+        }
+        if(d.mode==='fixed'){
+          document.documentElement.classList.add('mode-fixed');
+        }
+      }catch(e){}
+    }
+    // 초기 모드 버튼 텍스트 반영
+    const fixed = document.documentElement.classList.contains('mode-fixed');
+    document.getElementById('modeToggle').textContent = fixed ? '화면고정' : '전체화면';
+
+    if(!els.date.value){
+      const t=new Date(); const m=String(t.getMonth()+1).padStart(2,'0'); const da=String(t.getDate()).padStart(2,'0');
+      els.date.value = `${t.getFullYear()}-${m}-${da}`;
+    }
+  }}catch(e){}}
     if(!els.date.value){const t=new Date();const m=String(t.getMonth()+1).padStart(2,'0');const da=String(t.getDate()).padStart(2,'0');els.date.value=`${t.getFullYear()}-${m}-${da}`;}
   }
 
@@ -171,6 +206,23 @@
   // 테마 토글 & 리셋
   els.themeBtn.addEventListener('click',()=>{const inverted=document.body.classList.toggle('theme-invert');els.themeBtn.setAttribute('aria-pressed',inverted?'true':'false');save();});
   els.resetBtn.addEventListener('click',()=>{['scene','cut','take'].forEach(k=>setVal(els[k],MIN));});
+
+  // ===== 표시 모드 토글(스크롤 가능=전체화면 / 스크롤 불가=화면고정) =====
+  const modeBtn = document.getElementById('modeToggle');
+  function applyMode(mode){
+    const fixed = (mode === 'fixed');
+    document.documentElement.classList.toggle('mode-fixed', fixed);
+    modeBtn.textContent = fixed ? '화면고정' : '전체화면';
+    modeBtn.setAttribute('aria-pressed', fixed ? 'true' : 'false');
+    save();
+  }
+  modeBtn.addEventListener('click',()=>{
+    const nowFixed = document.documentElement.classList.toggle('mode-fixed');
+    document.documentElement.classList.toggle('mode-fixed', nowFixed); // ensure state
+    modeBtn.textContent = nowFixed ? '화면고정' : '전체화면';
+    modeBtn.setAttribute('aria-pressed', nowFixed ? 'true' : 'false');
+    save();
+  });});
 
   load();
 })();
