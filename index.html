@@ -3,17 +3,26 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover" />
-<title>웹 슬레이트 (Scene / Cut / Take) – Adaptive Number Size</title>
+<title>웹 슬레이트 (Scene / Cut / Take) – Adaptive Responsive (0–999)</title>
 <style>
   :root{
     --line:#fff; --board:#000; --label:#fff; --value:#fff;
-    --btn-bg:transparent; --btn-border:var(--line); --btn-text:var(--label);
+    --btn-bg:rgba(255,255,255,.08); --btn-border:var(--line); --btn-text:var(--label);
     --focus-ring:rgba(127,127,127,.45);
     --scroll-nudge:0px;
+
+    /* 반응형 스케일 기준치: 화면 너비와 높이 모두 고려해 유연조절 */
+    --u: max(1.8vmin, 8px);           /* 기본 단위(폰에서 너무 작지 않게) */
+    --num-max: 240px;                 /* 숫자 폰트 상한치(데스크탑에서 너무 과도하지 않게) */
+    --btn-max: 96px;                  /* 버튼 상한치 */
+    --pad-max: 28px;                  /* 패딩 상한치 */
   }
   @media (pointer:coarse){ :root{ --scroll-nudge:96px; } }
 
-  .theme-invert{ --line:#000; --board:#fff; --label:#000; --value:#000; }
+  .theme-invert{
+    --line:#000; --board:#fff; --label:#000; --value:#000;
+    --btn-bg:rgba(0,0,0,.08); --btn-border:var(--line); --btn-text:var(--label);
+  }
 
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{
@@ -23,57 +32,108 @@
     overflow-y:auto;
   }
 
-  .wrap{min-height:100dvh;display:flex;align-items:center;justify-content:center;flex-direction:column;}
-  .slate{background:var(--board);width:100%;max-width:920px;border:none;display:flex;flex-direction:column;}
+  .wrap{min-height:100dvh;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;}
+  .slate{background:var(--board);width:100vw;min-height:100dvh;display:flex;flex-direction:column;}
 
-  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:3px solid var(--line);font-weight:800;}
-  .brandToggle{color:var(--btn-text);text-decoration:none;padding:6px 10px;border:2px solid var(--btn-border);border-radius:10px;}
-  .midHint{flex:1;text-align:center;font-weight:300;font-size:10px;opacity:.7;letter-spacing:.02em;white-space:nowrap;}
-  .controls{display:flex;gap:8px;}
-  .themeBtn,.smallBtn{border:2px solid var(--btn-border);background:var(--btn-bg);color:var(--btn-text);padding:6px 10px;border-radius:10px;font-weight:800;cursor:pointer;}
+  /* 헤더 */
+  .top{
+    display:flex;align-items:center;justify-content:space-between;gap:clamp(8px, 1.2vw, 24px);
+    padding:clamp(10px, 1.5vh, var(--pad-max)) clamp(12px, 2vw, var(--pad-max));
+    border-bottom:3px solid var(--line);font-weight:800;
+  }
+  .brandToggle{
+    color:var(--btn-text);text-decoration:none;
+    padding:clamp(4px, 0.8vh, 10px) clamp(8px, 1.2vw, 14px);
+    border:2px solid var(--btn-border);border-radius:10px;background:var(--btn-bg);
+    transition:background .15s ease,border-color .15s ease;
+  }
+  .brandToggle:hover{background:color-mix(in srgb, var(--btn-bg) 60%, transparent);}
+  .midHint{
+    flex:1;text-align:center;font-weight:300;
+    font-size:clamp(10px, 1.4vmin, 12px);
+    opacity:.7;letter-spacing:.02em;white-space:nowrap;
+  }
+  .controls{display:flex;gap:clamp(6px, 1vw, 14px);}
+  .themeBtn,.smallBtn{
+    border:2px solid var(--btn-border);background:var(--btn-bg);color:var(--btn-text);
+    padding:clamp(4px, 0.8vh, 10px) clamp(8px, 1.2vw, 14px);
+    border-radius:10px;font-weight:800;cursor:pointer;
+    transition:background .15s ease,border-color .15s ease;
+  }
+  .themeBtn:hover,.smallBtn:hover{background:color-mix(in srgb, var(--btn-bg) 60%, transparent);}
   .themeBtn:focus-visible,.smallBtn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
 
-  .meta{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:3px solid var(--line);}
-  .meta .row{display:flex;flex-direction:column;padding:10px;}
-  .meta label{font:800 11px/1 var(--label);margin-bottom:4px;}
-  .meta input{background:transparent;color:var(--label);border:none;font-size:16px;font-weight:800;}
+  /* 메타 */
+  .meta{
+    display:grid;grid-template-columns:1fr 1fr 1fr;
+    border-bottom:3px solid var(--line);
+  }
+  .meta .row{
+    display:flex;flex-direction:column;justify-content:center;
+    padding:clamp(8px, 1.2vh, 12px) clamp(10px, 2vw, 16px);
+  }
+  .meta label{font:800 clamp(9px, 1.6vmin, 14px)/1 var(--label);margin-bottom:4px;}
+  .meta input{
+    background:transparent;color:var(--label);border:none;
+    font-size:clamp(14px, 2.2vmin, 22px);font-weight:800;min-width:0;
+  }
   .meta input::placeholder{color:#9ca3af;}
 
-  .grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);} 
-  .cell{padding:16px;border-right:3px solid var(--line);border-bottom:3px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+  /* 메인 그리드 */
+  .grid{
+    flex:1 1 auto;display:grid;grid-template-columns:repeat(3,1fr);
+  }
+  .cell{
+    padding:clamp(10px, 2vh, var(--pad-max));
+    border-right:3px solid var(--line);border-bottom:3px solid var(--line);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:clamp(8px, 1.4vh, 16px);
+  }
   .cell:last-child{border-right:none;}
 
-  .label{font-size:22px;font-weight:900;}
-  .valueBox{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;}
+  .label{
+    font-size:clamp(18px, 3vmin, 34px);
+    font-weight:900;letter-spacing:.12em;
+  }
+  .valueBox{
+    display:flex;align-items:center;justify-content:center;
+    gap:clamp(8px, 2vw, 20px);width:100%;
+  }
   .value{
-    flex:1;
-    text-align:center;
-    font-weight:900;
-    line-height:1;
-    color:var(--value);
-    user-select:none;
-    white-space:nowrap;
-    font-size:96px; /* 기본 모바일 */
+    flex:1;text-align:center;font-weight:900;line-height:1;color:var(--value);
+    user-select:none;white-space:nowrap;
+    /* 핵심: 화면에 맞춰 유연하게 커지고(데스크탑/아이패드) 휴대폰에서는 과하지 않게 */
+    font-size:clamp(56px, calc(8vmin + 6vw), var(--num-max));
   }
-  /* 아이패드 이상 */
-  @media (min-width:768px){
-    .value{ font-size:clamp(120px, 14vw, 160px); }
+  .btn{
+    border:none;background:transparent;color:#9ca3af;
+    width:clamp(44px, calc(4vmin + 2vw), var(--btn-max));
+    height:clamp(44px, calc(4vmin + 2vw), var(--btn-max));
+    border-radius:12px;font-size:clamp(22px, calc(3.2vmin + 1vw), 42px);
+    font-weight:900;cursor:pointer;touch-action:manipulation;
   }
-  /* 데스크탑 이상 */
-  @media (min-width:1200px){
-    .value{ font-size:clamp(160px, 12vw, 220px); }
-  }
-
-  .btn{border:none;background:transparent;color:#9ca3af;width:56px;height:56px;border-radius:12px;font-size:32px;font-weight:900;cursor:pointer;touch-action:manipulation;}
-  .btn:active{transform:translateY(1px);} 
+  .btn:active{transform:translateY(1px);}
   .btn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
 
+  /* 주소창 숨김 유도용 여유 높이(모바일에서만) */
   .scrollNudge{height:var(--scroll-nudge);flex:0 0 auto;}
 
-  @media (max-width:700px){
+  /* 작은 화면/세로: 단일열로 안전하게 */
+  @media (orientation:portrait){
+    .meta{grid-template-columns:1fr;}
     .grid{grid-template-columns:1fr;}
-    .label{font-size:20px;}
-    .btn{width:48px;height:48px;font-size:28px;}
+  }
+  /* 매우 작은 폭(아이폰 mini 등) 보정 */
+  @media (max-width:430px){
+    .value{font-size:clamp(48px, calc(9vmin + 5vw), 112px);}
+    .btn{width:clamp(40px, calc(4.8vmin + 2vw), 72px);height:clamp(40px, calc(4.8vmin + 2vw), 72px);}
+  }
+  /* 넓은 데스크탑에서 더 시원하게 (레이아웃 흔들리지 않는 선) */
+  @media (min-width:1200px){
+    :root{ --num-max: 300px; --btn-max: 110px; }
+  }
+  @media (min-width:1600px){
+    :root{ --num-max: 360px; --btn-max: 120px; }
   }
 </style>
 </head>
@@ -156,7 +216,7 @@
   }
   const step=(el,d)=>setVal(el, getVal(el)+d);
 
-  const KEY='slate-scroll-inline-0to999-v1';
+  const KEY='slate-scroll-inline-0to999-resp-v1';
   function save(){
     const data={
       scene:getVal(els.scene), cut:getVal(els.cut), take:getVal(els.take),
@@ -182,7 +242,7 @@
     }
   }
 
-  // +/- 버튼 (클릭만, 휠/드래그 미사용)
+  // +/- 버튼 (클릭만)
   document.querySelectorAll('.btn').forEach(btn=>{
     const t=btn.dataset.target, delta=Number(btn.dataset.step), el=els[t];
     btn.addEventListener('click',()=> step(el, delta));
@@ -203,9 +263,8 @@
   // 입력 저장
   [els.director, els.prod, els.date].forEach(inp=> inp.addEventListener('input', save));
 
-  // ===== 더블 탭/더블 클릭 → 직접 입력 =====
+  // 더블 탭/더블 클릭 → 직접 입력
   ['scene','cut','take'].forEach(id=> attachInlineEdit(els[id]));
-
   function attachInlineEdit(el){
     let lastTap=0;
     el.addEventListener('click', ()=>{
@@ -222,7 +281,8 @@
     input.type='number'; input.min=String(MIN); input.max=String(MAX);
     input.value=String(cur); input.className='inlineInputTemp';
     Object.assign(input.style,{
-      width:'60%', textAlign:'center', fontWeight:'900', fontSize:'48px',
+      width:'60%', textAlign:'center', fontWeight:'900',
+      fontSize:'clamp(36px, 6vmin, 64px)',
       padding:'6px 8px', background:'transparent', color:'var(--value)', border:'2px solid var(--line)'
     });
 
