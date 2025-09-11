@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover" />
-<title>웹 슬레이트 (Scene / Cut / Take) – Scroll + Inline Edit (0–999)</title>
+<title>DEKOBOKO SLATE</title>
 <style>
   :root{
     --line:#fff; --board:#000; --label:#fff; --value:#fff;
@@ -23,57 +23,39 @@
     overflow-y:auto;
   }
 
-  .wrap{min-height:100dvh;display:flex;align-items:stretch;justify-content:flex-start;flex-direction:column;} 
-  .slate{background:var(--board);width:100vw;max-width:none;min-height:100dvh;border:none;display:flex;flex-direction:column;} 
+  .wrap{min-height:100dvh;display:flex;align-items:stretch;justify-content:flex-start;flex-direction:column;}
+  .slate{background:var(--board);width:100vw;max-width:none;min-height:100dvh;border:none;display:flex;flex-direction:column;}
 
-  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 20px 24px;border-bottom:3px solid var(--line);font-weight:800;}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:3px solid var(--line);font-weight:800;}
   .brandToggle{color:var(--btn-text);text-decoration:none;padding:6px 10px;border:2px solid var(--btn-border);border-radius:10px;}
   .midHint{flex:1;text-align:center;font-weight:300;font-size:10px;opacity:.7;letter-spacing:.02em;white-space:nowrap;}
   .controls{display:flex;gap:8px;}
   .themeBtn,.smallBtn{border:2px solid var(--btn-border);background:var(--btn-bg);color:var(--btn-text);padding:6px 10px;border-radius:10px;font-weight:800;cursor:pointer;}
   .themeBtn:focus-visible,.smallBtn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
 
-  .meta{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:3px solid var(--line);margin-top:16px;}
+  .meta{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:3px solid var(--line);}
   .meta .row{display:flex;flex-direction:column;padding:10px;}
   .meta label{font:800 11px/1 var(--label);margin-bottom:4px;}
   .meta input{background:transparent;color:var(--label);border:none;font-size:16px;font-weight:800;}
   .meta input::placeholder{color:#9ca3af;}
 
-  .grid{flex:1 1 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(6px,1vw,12px);}   
-  .cell{padding:clamp(10px,2vh,24px);border-right:3px solid var(--line);border-bottom:3px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,1.4vh,16px);} 
+  .grid{flex:1 1 auto;display:grid;grid-template-columns:repeat(3,1fr);border-bottom:3px solid var(--line);} 
+  .cell{padding:16px;border-right:3px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
   .cell:last-child{border-right:none;}
 
-  .label{font-size:clamp(18px,3vw,32px);font-weight:900;letter-spacing:.08em;} 
-  .valueBox{display:flex;align-items:center;justify-content:center;gap:clamp(8px,2vw,16px);width:100%;} 
-  .value{flex:1;text-align:center;font-weight:900;line-height:1;color:var(--value);user-select:none;font-size:clamp(56px,12vw,140px);white-space:nowrap;} 
-  .btn{border:none;background:transparent;color:#9ca3af;width:clamp(44px,10vw,72px);height:clamp(44px,10vw,72px);border-radius:12px;font-size:clamp(24px,6vw,40px);font-weight:900;cursor:pointer;touch-action:manipulation;} 
+  .label{font-size:22px;font-weight:900;}
+  .valueBox{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;}
+  .value{flex:1;text-align:center;font-weight:900;line-height:1;color:var(--value);user-select:none;font-size:96px;white-space:nowrap;}
+  .btn{border:none;background:transparent;color:#9ca3af;width:56px;height:56px;border-radius:12px;font-size:32px;font-weight:900;cursor:pointer;touch-action:manipulation;}
   .btn:active{transform:translateY(1px);} .btn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
 
   .scrollNudge{height:var(--scroll-nudge);flex:0 0 auto;}
 
   @media (max-width:700px){
-  .grid{grid-template-columns:1fr;}
-}
-
-/* 세로(포트레이트)에서는 메타/그리드 모두 한 열로, 작은 기기 최적화 */
-@media (orientation:portrait){
-  .meta{grid-template-columns:1fr;}
-  .grid{grid-template-columns:1fr;}
-}
-
-/* 아주 작은 화면(아이폰 mini 등)에서 추가 축소 */
-@media (max-width:430px){
-  .value{font-size:clamp(48px,14vw,104px);} /* 숫자 잘림 방지 */
-  .btn{width:clamp(40px,12vw,64px);height:clamp(40px,12vw,64px);font-size:clamp(22px,6.5vw,36px);} 
-}
+    .grid{grid-template-columns:1fr;}
     .label{font-size:20px;}
     .btn{width:48px;height:48px;font-size:28px;}
   }
-  /* === Overrides for spacing & button contrast === */
-  .top{padding:20px 20px 24px !important;}
-  .meta{margin-top:16px !important;}
-  .brandToggle, .themeBtn, .smallBtn{background:transparent;border:2px solid var(--line) !important;color:var(--line) !important;}
-  .brandToggle:focus-visible, .themeBtn:focus-visible, .smallBtn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
 </style>
 </head>
 <body>
@@ -181,28 +163,23 @@
     }
   }
 
-  // +/- 버튼 (클릭만, 휠/드래그 미사용)
   document.querySelectorAll('.btn').forEach(btn=>{
     const t=btn.dataset.target, delta=Number(btn.dataset.step), el=els[t];
     btn.addEventListener('click',()=> step(el, delta));
   });
 
-  // 테마 토글
   els.themeBtn.addEventListener('click',()=>{
     const inverted = document.body.classList.toggle('theme-invert');
     els.themeBtn.setAttribute('aria-pressed', inverted?'true':'false');
     save();
   });
 
-  // 리셋
   els.resetBtn.addEventListener('click',()=>{
     ['scene','cut','take'].forEach(k=> setVal(els[k], MIN));
   });
 
-  // 입력 저장
   [els.director, els.prod, els.date].forEach(inp=> inp.addEventListener('input', save));
 
-  // ===== 더블 탭/더블 클릭 → 직접 입력 =====
   ['scene','cut','take'].forEach(id=> attachInlineEdit(els[id]));
 
   function attachInlineEdit(el){
@@ -220,7 +197,6 @@
     const input = document.createElement('input');
     input.type='number'; input.min=String(MIN); input.max=String(MAX);
     input.value=String(cur); input.className='inlineInputTemp';
-    // 인라인 입력 스타일: value와 유사하게 중앙정렬 (간단한 임베디드 스타일)
     Object.assign(input.style,{
       width:'60%', textAlign:'center', fontWeight:'900', fontSize:'48px',
       padding:'6px 8px', background:'transparent', color:'var(--value)', border:'2px solid var(--line)'
