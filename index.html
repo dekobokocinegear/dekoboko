@@ -1,116 +1,90 @@
 <!doctype html>
+
 <html lang="ko">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover" />
-<title>웹 슬레이트 (Scene / Cut / Take) – Scroll 0~999</title>
+<title>웹 슬레이트 (Scene / Cut / Take) – Scroll + Inline Edit (0–999)</title>
 <style>
   :root{
     --line:#fff; --board:#000; --label:#fff; --value:#fff;
     --btn-bg:transparent; --btn-border:var(--line); --btn-text:var(--label);
     --focus-ring:rgba(127,127,127,.45);
+    --scroll-nudge:0px;
   }
-  .theme-invert{
-    --line:#000; --board:#fff; --label:#000; --value:#000;
-  }
+  @media (pointer:coarse){ :root{ --scroll-nudge:96px; } }.theme-invert{ --line:#000; --board:#fff; --label:#000; --value:#000; }
 
-  *{box-sizing:border-box;margin:0;padding:0}
-  html,body{
-    width:100%; min-height:100dvh;
-    background:var(--board); color:var(--label);
-    font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,Helvetica,Arial,sans-serif;
-    overflow-y:auto;
-  }
+*{box-sizing:border-box;margin:0;padding:0} html,body{ width:100%; min-height:100dvh; background:var(--board); color:var(--label); font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,Helvetica,Arial,sans-serif; overflow-y:auto; }
 
-  .wrap{min-height:100dvh;display:flex;align-items:center;justify-content:center;flex-direction:column;}
-  .slate{background:var(--board);width:100%;max-width:920px;border:none;display:flex;flex-direction:column;}
+.wrap{min-height:100dvh;display:flex;align-items:center;justify-content:center;flex-direction:column;} .slate{background:var(--board);width:100%;max-width:920px;border:none;display:flex;flex-direction:column;}
 
-  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:3px solid var(--line);font-weight:800;}
-  .brandToggle{color:var(--btn-text);text-decoration:none;padding:6px 10px;border:2px solid var(--btn-border);border-radius:10px;}
-  .controls{display:flex;gap:8px;}
-  .themeBtn,.smallBtn{border:2px solid var(--btn-border);background:var(--btn-bg);color:var(--btn-text);padding:6px 10px;border-radius:10px;font-weight:800;cursor:pointer;}
-  .themeBtn:focus-visible,.smallBtn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:3px solid var(--line);font-weight:800;} .brandToggle{color:var(--btn-text);text-decoration:none;padding:6px 10px;border:2px solid var(--btn-border);border-radius:10px;} .controls{display:flex;gap:8px;} .themeBtn,.smallBtn{border:2px solid var(--btn-border);background:var(--btn-bg);color:var(--btn-text);padding:6px 10px;border-radius:10px;font-weight:800;cursor:pointer;} .themeBtn:focus-visible,.smallBtn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
 
-  .meta{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:3px solid var(--line);}
-  .meta .row{display:flex;flex-direction:column;padding:10px;}
-  .meta label{font:800 11px/1 var(--label);margin-bottom:4px;}
-  .meta input{background:transparent;color:var(--label);border:none;font-size:16px;font-weight:800;}
-  .meta input::placeholder{color:#9ca3af;}
+.meta{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:3px solid var(--line);} .meta .row{display:flex;flex-direction:column;padding:10px;} .meta label{font:800 11px/1 var(--label);margin-bottom:4px;} .meta input{background:transparent;color:var(--label);border:none;font-size:16px;font-weight:800;} .meta input::placeholder{color:#9ca3af;}
 
-  .grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);}
-  .cell{padding:16px;border-right:3px solid var(--line);border-bottom:3px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
-  .cell:last-child{border-right:none;}
+.grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);} .cell{padding:16px;border-right:3px solid var(--line);border-bottom:3px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;} .cell:last-child{border-right:none;}
 
-  .label{font-size:22px;font-weight:900;}
-  .valueBox{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;}
-  .value{flex:1;text-align:center;font-weight:900;line-height:1;color:var(--value);user-select:none;font-size:96px;}
-  .btn{border:none;background:transparent;color:#9ca3af;width:56px;height:56px;border-radius:12px;font-size:32px;font-weight:900;cursor:pointer;touch-action:manipulation;}
-  .btn:active{transform:translateY(1px);}
-  .btn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
+.label{font-size:22px;font-weight:900;} .valueBox{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;} .value{flex:1;text-align:center;font-weight:900;line-height:1;color:var(--value);user-select:none;font-size:96px;white-space:nowrap;} .btn{border:none;background:transparent;color:#9ca3af;width:56px;height:56px;border-radius:12px;font-size:32px;font-weight:900;cursor:pointer;touch-action:manipulation;} .btn:active{transform:translateY(1px);} .btn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
 
-  @media (max-width:700px){
-    .grid{grid-template-columns:1fr;}
-    .label{font-size:20px;}
-    .btn{width:48px;height:48px;font-size:28px;}
-  }
-</style>
+.scrollNudge{height:var(--scroll-nudge);flex:0 0 auto;}
+
+@media (max-width:700px){ .grid{grid-template-columns:1fr;} .label{font-size:20px;} .btn{width:48px;height:48px;font-size:28px;} } </style>
+
 </head>
 <body>
   <div class="wrap">
-    <section class="slate">
+    <section class="slate" aria-label="영화 촬영 슬레이트">
       <div class="top">
-        <a class="brandToggle" href="https://smartstore.naver.com/dekoboko" target="_blank">DEKOBOKO</a>
+        <a class="brandToggle" href="https://smartstore.naver.com/dekoboko" target="_blank" rel="noopener">DEKOBOKO</a>
         <div class="controls">
           <button class="smallBtn" id="resetCounts">↺ 리셋</button>
           <button class="themeBtn" id="themeToggle" aria-pressed="false">◐ 색상반전</button>
         </div>
-      </div>
-
-      <div class="meta">
-        <div class="row">
-          <label for="director">DIRECTOR</label>
-          <input id="director" placeholder="감독 이름" />
-        </div>
-        <div class="row">
-          <label for="prod">PRODUCTION / NOTE</label>
-          <input id="prod" placeholder="작품명 또는 메모" />
-        </div>
-        <div class="row">
-          <label for="date">DATE</label>
-          <input id="date" type="date" />
-        </div>
-      </div>
-
-      <div class="grid">
-        <div class="cell">
-          <div class="label">SCENE</div>
-          <div class="valueBox">
-            <button class="btn" data-target="scene" data-step="-1">−</button>
-            <div class="value" id="scene">0</div>
-            <button class="btn" data-target="scene" data-step="1">+</button>
-          </div>
-        </div>
-        <div class="cell">
-          <div class="label">CUT</div>
-          <div class="valueBox">
-            <button class="btn" data-target="cut" data-step="-1">−</button>
-            <div class="value" id="cut">0</div>
-            <button class="btn" data-target="cut" data-step="1">+</button>
-          </div>
-        </div>
-        <div class="cell">
-          <div class="label">TAKE</div>
-          <div class="valueBox">
-            <button class="btn" data-target="take" data-step="-1">−</button>
-            <div class="value" id="take">0</div>
-            <button class="btn" data-target="take" data-step="1">+</button>
-          </div>
-        </div>
-      </div>
-    </section>
+      </div><div class="meta">
+    <div class="row">
+      <label for="director">DIRECTOR</label>
+      <input id="director" placeholder="감독 이름" />
+    </div>
+    <div class="row">
+      <label for="prod">PRODUCTION / NOTE</label>
+      <input id="prod" placeholder="작품명 또는 메모" />
+    </div>
+    <div class="row">
+      <label for="date">DATE</label>
+      <input id="date" type="date" />
+    </div>
   </div>
 
-<script>
+  <div class="grid">
+    <div class="cell">
+      <div class="label">SCENE</div>
+      <div class="valueBox">
+        <button class="btn" data-target="scene" data-step="-1">−</button>
+        <div class="value" id="scene" tabindex="0" role="spinbutton" aria-label="Scene number" aria-valuemin="0" aria-valuemax="999" aria-valuenow="0">0</div>
+        <button class="btn" data-target="scene" data-step="1">+</button>
+      </div>
+    </div>
+    <div class="cell">
+      <div class="label">CUT</div>
+      <div class="valueBox">
+        <button class="btn" data-target="cut" data-step="-1">−</button>
+        <div class="value" id="cut" tabindex="0" role="spinbutton" aria-label="Cut number" aria-valuemin="0" aria-valuemax="999" aria-valuenow="0">0</div>
+        <button class="btn" data-target="cut" data-step="1">+</button>
+      </div>
+    </div>
+    <div class="cell">
+      <div class="label">TAKE</div>
+      <div class="valueBox">
+        <button class="btn" data-target="take" data-step="-1">−</button>
+        <div class="value" id="take" tabindex="0" role="spinbutton" aria-label="Take number" aria-valuemin="0" aria-valuemax="999" aria-valuenow="0">0</div>
+        <button class="btn" data-target="take" data-step="1">+</button>
+      </div>
+    </div>
+  </div>
+</section>
+<div class="scrollNudge" aria-hidden="true"></div>
+
+  </div><script>
 (function(){
   const MIN=0, MAX=999;
   const $=s=>document.querySelector(s);
@@ -122,14 +96,17 @@
 
   const clamp=n=>Math.min(MAX,Math.max(MIN,n));
   const getVal=el=>Number(el.textContent)||MIN;
-  const setVal=(el,n)=>{
-    const v=clamp(parseInt(n,10));
-    el.textContent=String(isNaN(v)?MIN:v);
-    save();
-  };
-  const step=(el,d)=>setVal(el,getVal(el)+d);
 
-  const KEY='slate-scroll-0to999';
+  function setVal(el,n){
+    const v = clamp(parseInt(n,10));
+    const safe = Number.isFinite(v) ? v : MIN;
+    el.textContent = String(safe);
+    el.setAttribute('aria-valuenow', String(safe));
+    save();
+  }
+  const step=(el,d)=>setVal(el, getVal(el)+d);
+
+  const KEY='slate-scroll-inline-0to999-v1';
   function save(){
     const data={
       scene:getVal(els.scene), cut:getVal(els.cut), take:getVal(els.take),
@@ -155,25 +132,76 @@
     }
   }
 
+  // +/- 버튼 (클릭만, 휠/드래그 미사용)
   document.querySelectorAll('.btn').forEach(btn=>{
     const t=btn.dataset.target, delta=Number(btn.dataset.step), el=els[t];
-    btn.addEventListener('click',()=>step(el,delta));
+    btn.addEventListener('click',()=> step(el, delta));
   });
 
+  // 테마 토글
   els.themeBtn.addEventListener('click',()=>{
-    const inverted=document.body.classList.toggle('theme-invert');
+    const inverted = document.body.classList.toggle('theme-invert');
     els.themeBtn.setAttribute('aria-pressed', inverted?'true':'false');
     save();
   });
 
+  // 리셋
   els.resetBtn.addEventListener('click',()=>{
     ['scene','cut','take'].forEach(k=> setVal(els[k], MIN));
   });
 
+  // 입력 저장
   [els.director, els.prod, els.date].forEach(inp=> inp.addEventListener('input', save));
+
+  // ===== 더블 탭/더블 클릭 → 직접 입력 =====
+  ['scene','cut','take'].forEach(id=> attachInlineEdit(els[id]));
+
+  function attachInlineEdit(el){
+    let lastTap=0;
+    el.addEventListener('click', ()=>{
+      const now=Date.now();
+      if(now-lastTap<300){ startInlineInput(el); }
+      lastTap=now;
+    });
+    el.addEventListener('dblclick', ()=> startInlineInput(el));
+  }
+
+  function startInlineInput(displayEl){
+    const cur = getVal(displayEl);
+    const input = document.createElement('input');
+    input.type='number'; input.min=String(MIN); input.max=String(MAX);
+    input.value=String(cur); input.className='inlineInputTemp';
+    // 인라인 입력 스타일: value와 유사하게 중앙정렬 (간단한 임베디드 스타일)
+    Object.assign(input.style,{
+      width:'60%', textAlign:'center', fontWeight:'900', fontSize:'48px',
+      padding:'6px 8px', background:'transparent', color:'var(--value)', border:'2px solid var(--line)'
+    });
+
+    const parent = displayEl.parentElement;
+    parent.replaceChild(input, displayEl);
+    input.focus({preventScroll:true}); input.select();
+
+    const commit=()=>{
+      const v = clamp(parseInt(input.value,10));
+      const restored = document.createElement('div');
+      restored.className='value'; restored.id=displayEl.id; restored.tabIndex=0;
+      restored.role='spinbutton'; restored.setAttribute('aria-label', displayEl.getAttribute('aria-label')||'number');
+      restored.setAttribute('aria-valuemin', String(MIN)); restored.setAttribute('aria-valuemax', String(MAX));
+      restored.textContent=String(Number.isFinite(v)?v:cur);
+      parent.replaceChild(restored, input);
+      attachInlineEdit(restored);
+      setVal(restored, restored.textContent);
+    };
+    const cancel=()=>{ input.value=String(cur); commit(); };
+
+    input.addEventListener('keydown', e=>{
+      if(e.key==='Enter'){ e.preventDefault(); commit(); }
+      if(e.key==='Escape'){ e.preventDefault(); cancel(); }
+    });
+    input.addEventListener('blur', commit);
+  }
 
   load();
 })();
-</script>
-</body>
+</script></body>
 </html>
