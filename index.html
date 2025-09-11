@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>웹 슬레이트 (Scene / Cut / Take) – Invert Theme · iPhone 대응</title>
+<title>웹 슬레이트 (Scene / Cut / Take) – Invert Theme · 디바이스 프리셋</title>
 <style>
   :root{
     --line:#fff;
@@ -14,7 +14,7 @@
     --btn-border:var(--line);
     --btn-text:var(--label);
     --focus-ring:rgba(127,127,127,.45);
-    --meta-h:96px;
+    --meta-h:96px;           /* 메타 행 높이 기본값 */
   }
   .theme-invert{
     --line:#000;
@@ -36,9 +36,11 @@
   .top{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 22px 12px; border-bottom:3px solid var(--line); font-weight:800; color:var(--label); letter-spacing:.02em;}
   .brandToggle{ text-decoration:none; color:var(--btn-text); display:inline-block; padding:6px 10px; border:2px solid var(--btn-border); border-radius:10px; }
   .brandToggle:focus-visible{ outline:3px solid var(--focus-ring); outline-offset:2px; }
-  .controls{ display:flex; gap:8px; align-items:center; }
-  .themeBtn,.smallBtn{appearance:none; border:2px solid var(--btn-border); background:var(--btn-bg); color:var(--btn-text); padding:6px 10px; border-radius:10px; font-weight:800; cursor:pointer; line-height:1; white-space:nowrap;}
-  .themeBtn:focus-visible,.smallBtn:focus-visible{ outline:3px solid var(--focus-ring); outline-offset:2px; }
+  .controls{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .themeBtn,.smallBtn,.presetSelect{appearance:none; border:2px solid var(--btn-border); background:var(--btn-bg); color:var(--btn-text); padding:6px 10px; border-radius:10px; font-weight:800; cursor:pointer; line-height:1; white-space:nowrap; }
+  .themeBtn:focus-visible,.smallBtn:focus-visible,.presetSelect:focus-visible{ outline:3px solid var(--focus-ring); outline-offset:2px; }
+  .presetSelect{ padding-right:28px; }
+  .presetSelect option{ color:initial; background:initial; }
 
   .meta{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:0; border-bottom:3px solid var(--line); }
   .meta .row{ display:flex; flex-direction:column; justify-content:stretch; padding:10px 12px; border-right:3px solid var(--line); height:var(--meta-h); }
@@ -65,21 +67,43 @@
   .btn:active{ transform:translateY(1px); }
   .btn:focus-visible{ outline:3px solid var(--focus-ring); outline-offset:2px; }
 
-  @media (max-width:430px){ /* iPhone 15 Pro 대응 */
-    :root{ --meta-h:84px; }
-    .meta input{ font-size:14px; height:calc(var(--meta-h) - 28px); padding:14px 0; }
-    .value{ font-size:64px; }
-  }
+  /* ===== 디바이스 프리셋: 선택 시 화면 폭과 무관하게 강제 적용 ===== */
+  body.preset-iphone-mini{ --meta-h:80px; }
+  body.preset-iphone-mini .meta input{ font-size:14px; height:calc(var(--meta-h) - 28px); padding:14px 0; }
+  body.preset-iphone-mini .value{ font-size:60px; }
+  body.preset-iphone-mini .btn{ width:60px; height:60px; font-size:28px; }
 
+  body.preset-iphone-15-pro{ --meta-h:84px; }
+  body.preset-iphone-15-pro .meta input{ font-size:14px; height:calc(var(--meta-h) - 28px); padding:14px 0; }
+  body.preset-iphone-15-pro .value{ font-size:64px; }
+
+  body.preset-ipad{ --meta-h:100px; }
+  body.preset-ipad .meta input{ font-size:18px; height:calc(var(--meta-h) - 36px); }
+  body.preset-ipad .value{ font-size:84px; }
+
+  body.preset-galaxy-s25{ --meta-h:90px; }
+  body.preset-galaxy-s25 .meta input{ font-size:15px; height:calc(var(--meta-h) - 30px); padding:15px 0; }
+  body.preset-galaxy-s25 .value{ font-size:72px; }
+
+  body.preset-desktop{ --meta-h:120px; }
+  body.preset-desktop .meta input{ font-size:18px; height:calc(var(--meta-h) - 36px); }
+  body.preset-desktop .value{ font-size:96px; }
+
+  /* ===== 기존 반응형: 프리셋이 없을 때만 뷰포트로 조정 ===== */
+  @media (max-width:430px){ /* iPhone 15 Pro 등 좁은 폭 */
+    body:not([class*="preset-"]) :root{ --meta-h:84px; }
+    body:not([class*="preset-"]) .meta input{ font-size:14px; height:calc(var(--meta-h) - 28px); padding:14px 0; }
+    body:not([class*="preset-"]) .value{ font-size:64px; }
+  }
   @media (max-width:700px){
-    .grid{ grid-template-columns: 1fr; }
-    .cell{ border-right:none; }
-    .label{ font-size:22px; }
-    .value{ font-size:72px; }
-    .meta{ grid-template-columns:1fr; }
-    .meta .row{ border-right:none; border-bottom:3px solid var(--line); }
-    .meta .row:last-child{ border-bottom:none; }
-    .btn{ width:64px; height:64px; font-size:30px; }
+    body:not([class*="preset-"]) .grid{ grid-template-columns: 1fr; }
+    body:not([class*="preset-"]) .cell{ border-right:none; }
+    body:not([class*="preset-"]) .label{ font-size:22px; }
+    body:not([class*="preset-"]) .value{ font-size:72px; }
+    body:not([class*="preset-"]) .meta{ grid-template-columns:1fr; }
+    body:not([class*="preset-"]) .meta .row{ border-right:none; border-bottom:3px solid var(--line); }
+    body:not([class*="preset-"]) .meta .row:last-child{ border-bottom:none; }
+    body:not([class*="preset-"]) .btn{ width:64px; height:64px; font-size:30px; }
   }
 </style>
 </head>
@@ -89,6 +113,15 @@
       <div class="top">
         <a class="brandToggle" href="https://smartstore.naver.com/dekoboko" target="_blank" rel="noopener">DEKOBOKO</a>
         <div class="controls">
+          <label for="presetSelect" class="sr-only" style="position:absolute;clip:rect(1px,1px,1px,1px);width:1px;height:1px;overflow:hidden;">디바이스 프리셋 선택</label>
+          <select id="presetSelect" class="presetSelect" aria-label="디바이스 해상도 프리셋">
+            <option value="auto">자동(뷰포트 기반)</option>
+            <option value="iphone-mini">iPhone mini</option>
+            <option value="iphone-15-pro">iPhone 15 Pro</option>
+            <option value="galaxy-s25">Galaxy S25 Ultra</option>
+            <option value="ipad">iPad</option>
+            <option value="desktop">Desktop</option>
+          </select>
           <button class="smallBtn" id="resetCounts" aria-label="Scene/Cut/Take 값 초기화">↺ 리셋</button>
           <button class="themeBtn" id="themeToggle" aria-pressed="false" aria-label="흑백 반전 테마 토글">◐ 색상반전</button>
         </div>
@@ -148,14 +181,15 @@
 (function(){
   const MIN=1, MAX=100;
   const $ = (s, r=document)=>r.querySelector(s);
-  const els={ scene:$('#scene'), cut:$('#cut'), take:$('#take'), director:$('#director'), prod:$('#prod'), date:$('#date'), themeBtn:$('#themeToggle'), resetBtn:$('#resetCounts') };
+  const els={ scene:$('#scene'), cut:$('#cut'), take:$('#take'), director:$('#director'), prod:$('#prod'), date:$('#date'), themeBtn:$('#themeToggle'), resetBtn:$('#resetCounts'), presetSelect:$('#presetSelect') };
 
   const clampWrap=n=>n>MAX?MIN:n<MIN?MAX:n;
   const getVal=el=>Number(el.textContent)||MIN;
   const setVal=(el,n)=>{ const v=clampWrap(parseInt(n,10)||MIN); el.textContent=String(v); el.setAttribute('aria-valuenow',String(v)); save(); maybeVibrate(); };
   const step=(el,d)=>setVal(el, getVal(el)+d);
 
-  const KEY='slate-state-v6';
+  const KEY='slate-state-v7';
+  const PRESET_KEY='slate-preset-v1';
   function save(){
     const data={ scene:getVal(els.scene), cut:getVal(els.cut), take:getVal(els.take), director:els.director.value||'', prod:els.prod.value||'', date:els.date.value||'', theme:document.body.classList.contains('theme-invert') ? 'invert' : 'default' };
     try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){}
@@ -165,11 +199,17 @@
     if(raw){
       try{ const d=JSON.parse(raw); ['scene','cut','take'].forEach(k=> setVal(els[k], d[k]??MIN)); els.director.value=d.director||''; els.prod.value=d.prod||''; els.date.value=d.date||''; if(d.theme==='invert'){ document.body.classList.add('theme-invert'); els.themeBtn.setAttribute('aria-pressed','true'); } }catch(e){}
     }
+    // preset load
+    const p = localStorage.getItem(PRESET_KEY)||'auto';
+    if(els.presetSelect){ els.presetSelect.value=p; applyPreset(p); }
+
     if(!els.date.value){ const t=new Date(); const m=String(t.getMonth()+1).padStart(2,'0'); const da=String(t.getDate()).padStart(2,'0'); els.date.value = `${t.getFullYear()}-${m}-${da}`; }
   }
 
+  // 입력 저장
   [els.director, els.prod, els.date].forEach(inp=>{ inp.addEventListener('input', save); inp.addEventListener('change', save); });
 
+  // 값 블록: 키보드 + 휠 + 직접입력
   [els.scene, els.cut, els.take].forEach(el=>{
     el.addEventListener('keydown', e=>{
       switch(e.key){
@@ -185,6 +225,7 @@
     addDirectInput(el);
   });
 
+  // +/- 버튼 롱프레스
   const REPEAT_DELAY=400, REPEAT_RATE=120;
   document.querySelectorAll('.btn').forEach(btn=>{
     const targetId = btn.dataset.target; const delta = Number(btn.dataset.step); const targetEl = els[targetId];
@@ -225,8 +266,19 @@
   function applyThemeToggle(){ const inverted = document.body.classList.toggle('theme-invert'); els.themeBtn.setAttribute('aria-pressed', inverted ? 'true' : 'false'); save(); }
   els.themeBtn.addEventListener('click', applyThemeToggle);
 
+  // 디바이스 프리셋 적용/저장
+  function applyPreset(p){
+    const classes=[...document.body.classList].filter(c=>c.startsWith('preset-'));
+    classes.forEach(c=> document.body.classList.remove(c));
+    if(p && p!=='auto') document.body.classList.add('preset-'+p);
+    try{ localStorage.setItem(PRESET_KEY, p); }catch(e){}
+  }
+  if(els.presetSelect){ els.presetSelect.addEventListener('change', e=> applyPreset(e.target.value)); }
+
+  // 진동
   function maybeVibrate(){ if('vibrate' in navigator){ try{ navigator.vibrate(8); }catch(e){} } }
 
+  // 리셋 버튼
   els.resetBtn.addEventListener('click', ()=>{ ['scene','cut','take'].forEach(k=> setVal(els[k], MIN)); });
 
   load();
