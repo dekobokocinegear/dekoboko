@@ -238,17 +238,26 @@
   }
   function applyUniformScale(){
     const wrap = els.scaleWrap, slate = els.slate; if(!wrap||!slate) return;
-    // 측정 위해 스케일 초기화
+    // 스케일 초기화 후 자연 크기 측정
     wrap.style.transform = 'scale(1) translate(0px,0px)';
-    // 자연 크기 측정
     const naturalW = slate.offsetWidth;
     const naturalH = slate.offsetHeight;
     const vp = getViewport();
-    const gutter = 16; // 화면 가장자리 여백
-    const scale = Math.min((vp.w - gutter*2) / naturalW, (vp.h - gutter*2) / naturalH);
+
+    const edge = 0; // 여백(필요시 8~16 추천)
+    const contain = Math.min((vp.w - edge*2) / naturalW, (vp.h - edge*2) / naturalH); // 전체 보이기
+    const cover   = Math.max((vp.w - edge*2) / naturalW, (vp.h - edge*2) / naturalH); // 화면 채우기(일부 크롭 가능)
+
+    // 자동 전환: contain 기준 여백이 눈에 띄면 cover로 채우기
+    const gutterW = (vp.w - naturalW*contain);
+    const gutterH = (vp.h - naturalH*contain);
+    const needCover = (gutterW > naturalW*0.02) || (gutterH > naturalH*0.02); // 2% 이상 여백이면 채우기
+    const scale = needCover ? cover : contain;
+
     const dx = Math.max(0, (vp.w - naturalW*scale)/2);
     const dy = Math.max(0, (vp.h - naturalH*scale)/2);
     wrap.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
+  }px, ${dy}px) scale(${scale})`;
   }
   ['resize','orientationchange'].forEach(evt=> window.addEventListener(evt, applyUniformScale));
   if(window.visualViewport){ visualViewport.addEventListener('resize', applyUniformScale); visualViewport.addEventListener('scroll', applyUniformScale); }
