@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>웹 슬레이트 (Scene / Cut / Take) – Invert Theme</title>
+<title>웹 슬레이트 (Scene / Cut / Take) – Invert Theme · 개선판</title>
 <style>
   :root{
     --line:#fff;
@@ -26,6 +26,7 @@
     --focus-ring:rgba(0,0,0,.35);
   }
 
+  *{box-sizing:border-box}
   body{margin:0; background:var(--board); color:var(--label);
     font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,Helvetica,Arial,sans-serif}
   .wrap{min-height:100svh; display:grid; place-items:center; padding:24px}
@@ -35,14 +36,14 @@
   .brandToggle{ text-decoration:none; color:var(--btn-text); display:inline-block; padding:6px 10px; border:2px solid var(--btn-border); border-radius:10px; }
   .brandToggle:focus-visible{ outline:3px solid var(--focus-ring); outline-offset:2px; }
   .controls{ display:flex; gap:8px; align-items:center; }
-  .themeBtn{appearance:none; border:2px solid var(--btn-border); background:var(--btn-bg); color:var(--btn-text); padding:6px 10px; border-radius:10px; font-weight:800; cursor:pointer; line-height:1; white-space:nowrap;}
-  .themeBtn:focus-visible{ outline:3px solid var(--focus-ring); outline-offset:2px; }
+  .themeBtn,.smallBtn{appearance:none; border:2px solid var(--btn-border); background:var(--btn-bg); color:var(--btn-text); padding:6px 10px; border-radius:10px; font-weight:800; cursor:pointer; line-height:1; white-space:nowrap;}
+  .themeBtn:focus-visible,.smallBtn:focus-visible{ outline:3px solid var(--focus-ring); outline-offset:2px; }
 
   .meta{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:0; border-bottom:3px solid var(--line); }
-  .meta .row{ display:flex; flex-direction:column; justify-content:stretch; padding:10px 12px; border-right:3px solid var(--line); box-sizing:border-box; }
+  .meta .row{ display:flex; flex-direction:column; justify-content:stretch; padding:10px 12px; border-right:3px solid var(--line); }
   .meta .row:last-child{border-right:none;}
   .meta label{ font:800 9px/1 var(--label); letter-spacing:.08em; margin-bottom:6px }
-  .meta input{ flex:1; min-width:0; background:transparent; color:var(--label); border:none; border-radius:0; font-size:20px; font-weight:800; padding:20px 14px; box-sizing:border-box; height:96px; }
+  .meta input{ flex:1; min-width:0; background:transparent; color:var(--label); border:none; border-radius:0; font-size:20px; font-weight:800; padding:20px 14px; height:96px; }
   .meta input::placeholder{color:#9ca3af; opacity:.9; font-weight:800}
 
   .grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:0; }
@@ -55,10 +56,10 @@
   .value{ border:none; border-radius:0; padding:20px 14px; min-width:140px; text-align:center; font-weight:900; font-size:96px; line-height:1; color:var(--value); user-select:none; cursor:pointer; outline:none; }
   .value:focus{ box-shadow:none; }
 
-  .inlineInput{ width:160px; text-align:center; font-weight:900; font-size:72px; padding:10px 8px; background:transparent; color:var(--value); border:2px solid var(--line); }
+  .inlineInput{ width:180px; text-align:center; font-weight:900; font-size:72px; padding:10px 8px; background:transparent; color:var(--value); border:2px solid var(--line); }
 
   .btnRow{ display:flex; align-items:center; justify-content:center; gap:12px; }
-  .btn{ appearance:none; border:none; background:var(--btn-bg); color:var(--btn-text); width:52px; height:52px; border-radius:12px; font-size:28px; font-weight:900; line-height:1; cursor:pointer; }
+  .btn{ appearance:none; border:none; background:var(--btn-bg); color:var(--btn-text); width:56px; height:56px; border-radius:12px; font-size:28px; font-weight:900; line-height:1; cursor:pointer; touch-action:manipulation; }
   .btn:active{ transform:translateY(1px); }
   .btn:focus-visible{ outline:3px solid var(--focus-ring); outline-offset:2px; }
 
@@ -71,6 +72,7 @@
     .meta .row{ border-right:none; border-bottom:3px solid var(--line); }
     .meta .row:last-child{ border-bottom:none; }
     .meta input{ font-size:16px; }
+    .btn{ width:64px; height:64px; font-size:30px; }
   }
 </style>
 </head>
@@ -80,6 +82,7 @@
       <div class="top">
         <a class="brandToggle" href="https://smartstore.naver.com/dekoboko" target="_blank" rel="noopener">DEKOBOKO</a>
         <div class="controls">
+          <button class="smallBtn" id="resetCounts" aria-label="Scene/Cut/Take 값 초기화">↺ 리셋</button>
           <button class="themeBtn" id="themeToggle" aria-pressed="false" aria-label="흑백 반전 테마 토글">◐ 색상반전</button>
         </div>
       </div>
@@ -138,17 +141,17 @@
 (function(){
   const MIN=1, MAX=100;
   const $ = (s, r=document)=>r.querySelector(s);
-  const els={ scene:$('#scene'), cut:$('#cut'), take:$('#take'), director:$('#director'), prod:$('#prod'), date:$('#date'), themeBtn:$('#themeToggle') };
+  const els={ scene:$('#scene'), cut:$('#cut'), take:$('#take'), director:$('#director'), prod:$('#prod'), date:$('#date'), themeBtn:$('#themeToggle'), resetBtn:$('#resetCounts') };
 
   const clampWrap=n=>n>MAX?MIN:n<MIN?MAX:n;
   const getVal=el=>Number(el.textContent)||MIN;
-  const setVal=(el,n)=>{ const v=clampWrap(parseInt(n,10)||MIN); el.textContent=String(v); el.setAttribute('aria-valuenow',String(v)); save(); };
+  const setVal=(el,n)=>{ const v=clampWrap(parseInt(n,10)||MIN); el.textContent=String(v); el.setAttribute('aria-valuenow',String(v)); save(); maybeVibrate(); };
   const step=(el,d)=>setVal(el, getVal(el)+d);
 
-  const KEY='slate-state-v5';
+  const KEY='slate-state-v6';
   function save(){
     const data={ scene:getVal(els.scene), cut:getVal(els.cut), take:getVal(els.take), director:els.director.value||'', prod:els.prod.value||'', date:els.date.value||'', theme:document.body.classList.contains('theme-invert') ? 'invert' : 'default' };
-    localStorage.setItem(KEY, JSON.stringify(data));
+    try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){}
   }
   function load(){
     const raw=localStorage.getItem(KEY);
@@ -158,8 +161,10 @@
     if(!els.date.value){ const t=new Date(); const m=String(t.getMonth()+1).padStart(2,'0'); const da=String(t.getDate()).padStart(2,'0'); els.date.value = `${t.getFullYear()}-${m}-${da}`; }
   }
 
+  // basic input persistence
   [els.director, els.prod, els.date].forEach(inp=>{ inp.addEventListener('input', save); inp.addEventListener('change', save); });
 
+  // make value blocks keyboard friendly + direct edit
   [els.scene, els.cut, els.take].forEach(el=>{
     el.addEventListener('keydown', e=>{
       switch(e.key){
@@ -171,20 +176,57 @@
         case 'End': e.preventDefault(); setVal(el,MAX); break;
       }
     });
+    // wheel to change
+    el.addEventListener('wheel', e=>{ e.preventDefault(); const dy=e.deltaY||0; step(el, dy>0?-1:+1); }, {passive:false});
     addDirectInput(el);
   });
 
-  document.querySelectorAll('.btn').forEach(btn=>{ const targetId = btn.dataset.target; const delta = Number(btn.dataset.step); const targetEl = els[targetId]; btn.addEventListener('click', ()=> step(targetEl, delta)); });
+  // plus/minus buttons + long-press repeat
+  const REPEAT_DELAY=400, REPEAT_RATE=120;
+  document.querySelectorAll('.btn').forEach(btn=>{
+    const targetId = btn.dataset.target; const delta = Number(btn.dataset.step); const targetEl = els[targetId];
+    let timer=null, rep=null;
+    const clearTimers=()=>{ if(timer){clearTimeout(timer); timer=null;} if(rep){clearInterval(rep); rep=null;} };
+    const press=()=>{ step(targetEl, delta); timer=setTimeout(()=>{ rep=setInterval(()=> step(targetEl, delta), REPEAT_RATE); }, REPEAT_DELAY); };
+    const release=()=> clearTimers();
+    btn.addEventListener('click', ()=> step(targetEl, delta));
+    btn.addEventListener('pointerdown', press);
+    btn.addEventListener('pointerup', release);
+    btn.addEventListener('pointerleave', release);
+    btn.addEventListener('pointercancel', release);
+  });
 
   function addDirectInput(el){ let lastTap=0; el.addEventListener('click', ()=>{ const now=Date.now(); if(now-lastTap<300){ startInlineInput(el); } lastTap=now; }); el.addEventListener('dblclick', ()=> startInlineInput(el)); }
 
-  function startInlineInput(el){ const cur=getVal(el); const input=document.createElement('input'); input.type='number'; input.className='inlineInput'; input.min=String(MIN); input.max=String(MAX); input.value=String(cur); el.replaceWith(input); input.focus(); input.select();
-    const commit=()=>{ const v = clampWrap(parseInt(input.value,10)||cur); const restored = document.createElement('div'); restored.className='value'; restored.id = el.id; restored.tabIndex=0; restored.role='spinbutton'; restored.setAttribute('aria-label', el.getAttribute('aria-label')||'number'); restored.setAttribute('aria-valuemin', String(MIN)); restored.setAttribute('aria-valuemax', String(MAX)); restored.textContent=String(v); input.parentElement.replaceChild(restored, input); addDirectInput(restored); restored.addEventListener('keydown', e=>{ switch(e.key){ case 'ArrowUp': e.preventDefault(); setVal(restored, getVal(restored)+1); break; case 'ArrowDown': e.preventDefault(); setVal(restored, getVal(restored)-1); break; case 'PageUp': e.preventDefault(); setVal(restored, getVal(restored)+10); break; case 'PageDown': e.preventDefault(); setVal(restored, getVal(restored)-10); break; case 'Home': e.preventDefault(); setVal(restored,MIN); break; case 'End': e.preventDefault(); setVal(restored,MAX); break; } }); save(); };
+  function startInlineInput(el){ const cur=getVal(el); const input=document.createElement('input'); input.type='number'; input.className='inlineInput'; input.min=String(MIN); input.max=String(MAX); input.value=String(cur); el.replaceWith(input); input.focus({preventScroll:true}); input.select();
+    const commit=()=>{ const v = clampWrap(parseInt(input.value,10)||cur); const restored = document.createElement('div'); restored.className='value'; restored.id = el.id; restored.tabIndex=0; restored.role='spinbutton'; restored.setAttribute('aria-label', el.getAttribute('aria-label')||'number'); restored.setAttribute('aria-valuemin', String(MIN)); restored.setAttribute('aria-valuemax', String(MAX)); restored.textContent=String(v); input.parentElement.replaceChild(restored, input); addDirectInput(restored); attachValueHandlers(restored); setVal(restored,v); };
     const cancel=()=>{ input.value=String(cur); commit(); };
-    input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); commit(); } if(e.key==='Escape'){ e.preventDefault(); cancel(); } }); input.addEventListener('blur', commit); }
+    input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); commit(); } if(e.key==='Escape'){ e.preventDefault(); cancel(); } });
+    input.addEventListener('blur', commit);
+  }
+
+  function attachValueHandlers(el){
+    el.addEventListener('keydown', e=>{
+      switch(e.key){
+        case 'ArrowUp': e.preventDefault(); setVal(el, getVal(el)+1); break;
+        case 'ArrowDown': e.preventDefault(); setVal(el, getVal(el)-1); break;
+        case 'PageUp': e.preventDefault(); setVal(el, getVal(el)+10); break;
+        case 'PageDown': e.preventDefault(); setVal(el, getVal(el)-10); break;
+        case 'Home': e.preventDefault(); setVal(el,MIN); break;
+        case 'End': e.preventDefault(); setVal(el,MAX); break;
+      }
+    });
+    el.addEventListener('wheel', e=>{ e.preventDefault(); const dy=e.deltaY||0; setVal(el, getVal(el)+(dy>0?-1:+1)); }, {passive:false});
+  }
 
   function applyThemeToggle(){ const inverted = document.body.classList.toggle('theme-invert'); els.themeBtn.setAttribute('aria-pressed', inverted ? 'true' : 'false'); save(); }
   els.themeBtn.addEventListener('click', applyThemeToggle);
+
+  // simple haptic feedback (best-effort)
+  function maybeVibrate(){ if('vibrate' in navigator){ try{ navigator.vibrate(8); }catch(e){} } }
+
+  // reset counts only
+  els.resetBtn.addEventListener('click', ()=>{ ['scene','cut','take'].forEach(k=> setVal(els[k], MIN)); });
 
   load();
 })();
