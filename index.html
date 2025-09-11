@@ -3,18 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover" />
-<title>웹 슬레이트 (Scene / Cut / Take) – Uniform Scale Fit</title>
+<title>웹 슬레이트 (Scene / Cut / Take) – Adaptive Fullscreen Stretch</title>
 <style>
   :root{
-    --line:#fff;
-    --board:#000;
-    --label:#fff;
-    --value:#fff;
-    --btn-bg:transparent;
-    --btn-border:var(--line);
-    --btn-text:var(--label);
+    --line:#fff; --board:#000; --label:#fff; --value:#fff;
+    --btn-bg:transparent; --btn-border:var(--line); --btn-text:var(--label);
     --focus-ring:rgba(127,127,127,.45);
-    --meta-h:96px; /* 기본 메타 행 높이 */
   }
   .theme-invert{
     --line:#000; --board:#fff; --label:#000; --value:#000;
@@ -22,250 +16,168 @@
     --focus-ring:rgba(0,0,0,.35);
   }
 
-  *,*::before,*::after{ box-sizing:border-box }
-  html,body{ height:100%; }
-  body{ margin:0; background:var(--board); color:var(--label);
-    font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,Helvetica,Arial,sans-serif; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100svh;background:var(--board);color:var(--label);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,Helvetica,Arial,sans-serif;overflow:hidden}
 
-  /* ===== 스테이지: 전체 화면 채우기 ===== */
-  .stage{ position:fixed; inset:0; width:100vw; height:100svh; overflow:hidden; background:var(--board); padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
-  .scaleWrap{ position:absolute; left:0; top:0; transform-origin:0 0; will-change:transform; }
+  .wrap{width:100%;height:100svh;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
+  .slate{background:var(--board);width:100%;height:100%;border-radius:0;box-shadow:none;border:none;display:flex;flex-direction:column;}
 
-  /* ===== 슬레이트: 디자인 기준 크기(자연 크기) ===== */
-  .slate{ background:var(--board); width:min(920px, 94vw); border-radius:12px; box-shadow:0 12px 40px rgba(0,0,0,.25); border:1px solid rgba(127,127,127,.35); overflow:hidden; }
+  .top{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:clamp(8px,1.2vw,18px);padding:clamp(8px,2vh,22px) clamp(10px,3vw,28px) clamp(6px,1.5vh,16px);border-bottom:3px solid var(--line);font-weight:800;color:var(--label);letter-spacing:.02em;}
+  .brandToggle{text-decoration:none;color:var(--btn-text);padding:clamp(4px,0.8vh,8px) clamp(8px,1.2vw,12px);border:2px solid var(--btn-border);border-radius:10px;}
+  .controls{display:flex;gap:clamp(6px,1vw,12px);align-items:center;}
+  .themeBtn,.smallBtn{appearance:none;border:2px solid var(--btn-border);background:var(--btn-bg);color:var(--btn-text);padding:clamp(4px,0.8vh,8px) clamp(8px,1.2vw,12px);border-radius:10px;font-weight:800;cursor:pointer;line-height:1;white-space:nowrap;font-size:clamp(12px,1.4vw,16px);} 
+  .themeBtn:focus-visible,.smallBtn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
 
-  .top{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 22px 12px; border-bottom:3px solid var(--line); font-weight:800; color:var(--label); letter-spacing:.02em;}
-  .brandToggle{ text-decoration:none; color:var(--btn-text); display:inline-block; padding:6px 10px; border:2px solid var(--btn-border); border-radius:10px; }
-  .brandToggle:focus-visible{ outline:3px solid var(--focus-ring); outline-offset:2px; }
-  .controls{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .themeBtn,.smallBtn{ appearance:none; border:2px solid var(--btn-border); background:var(--btn-bg); color:var(--btn-text); padding:6px 10px; border-radius:10px; font-weight:800; cursor:pointer; line-height:1; white-space:nowrap; }
-  .themeBtn:focus-visible,.smallBtn:focus-visible{ outline:3px solid var(--focus-ring); outline-offset:2px; }
+  /* 메타: 내부 칸 구분선 제거(요청 사항) */
+  .meta{flex:0 0 clamp(90px,15vh,160px);display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:3px solid var(--line);} 
+  .meta .row{display:flex;flex-direction:column;justify-content:center;padding:clamp(8px,1vh,12px) clamp(10px,2vw,16px);} 
+  .meta label{font:800 clamp(10px,1.2vw,14px)/1 var(--label);letter-spacing:.08em;margin-bottom:4px}
+  .meta input{flex:1;background:transparent;color:var(--label);border:none;font-size:clamp(14px,2vw,24px);font-weight:800;padding:0;min-width:0;}
+  .meta input::placeholder{color:#9ca3af;opacity:.9;font-weight:800}
+  input[type="date"]{-webkit-appearance:none;appearance:none;}
 
-  .meta{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:0; border-bottom:3px solid var(--line); }
-  .meta .row{ display:flex; flex-direction:column; justify-content:stretch; padding:10px 12px; border-right:3px solid var(--line); height:var(--meta-h); }
-  .meta .row:last-child{border-right:none;}
-  .meta label{ font:800 9px/1 var(--label); letter-spacing:.08em; margin-bottom:6px }
-  .meta input{ flex:1; min-width:0; background:transparent; color:var(--label); border:none; border-radius:0; font-size:16px; font-weight:800; padding:18px 0px; height:calc(var(--meta-h) - 36px); line-height:1.2; }
-  .meta input::placeholder{color:#9ca3af; opacity:.9; font-weight:800}
-  input[type="date"]{ -webkit-appearance:none; appearance:none; }
-
-  .grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:0; }
-  .cell{ padding:18px 18px 22px; border-right:3px solid var(--line); border-bottom:3px solid var(--line); min-height:148px; display:flex; flex-direction:column; gap:12px; align-items:center; }
+  .grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);} 
+  .cell{padding:clamp(10px,2.2vh,24px);border-right:3px solid var(--line);border-bottom:3px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,1.4vh,16px);} 
   .cell:last-child{border-right:none;}
 
-  .label{ font-size:28px; font-weight:900; color:var(--label); letter-spacing:.12em; }
+  .label{font-size:clamp(18px,3vw,32px);font-weight:900;color:var(--label);letter-spacing:.12em;}
+  .valueBox{display:flex;flex-direction:column;align-items:center;gap:clamp(8px,1.2vh,14px);} 
+  .value{border:none;padding:clamp(8px,2vh,28px);width:100%;text-align:center;font-weight:900;font-size:clamp(56px,12vw,140px);line-height:1;color:var(--value);user-select:none;cursor:pointer;outline:none;}
 
-  .valueBox{ display:flex; flex-direction:column; align-items:center; gap:10px; }
-  .value{ border:none; border-radius:0; padding:20px 14px; min-width:140px; text-align:center; font-weight:900; font-size:96px; line-height:1; color:var(--value); user-select:none; cursor:pointer; outline:none; }
-  .value:focus{ box-shadow:none; }
+  .inlineInput{width:60%;text-align:center;font-weight:900;font-size:clamp(40px,10vw,120px);padding:clamp(6px,1.8vh,18px);background:transparent;color:var(--value);border:2px solid var(--line);} 
 
-  .inlineInput{ width:180px; text-align:center; font-weight:900; font-size:72px; padding:10px 8px; background:transparent; color:var(--value); border:2px solid var(--line); }
+  .btnRow{display:flex;align-items:center;justify-content:center;gap:clamp(8px,2vw,16px);} 
+  .btn{appearance:none;border:none;background:var(--btn-bg);color:var(--btn-text);width:clamp(48px,12vw,120px);height:clamp(48px,12vw,120px);border-radius:12px;font-size:clamp(20px,6vw,56px);font-weight:900;cursor:pointer;touch-action:manipulation;} 
+  .btn:active{transform:translateY(1px);} 
+  .btn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
 
-  .btnRow{ display:flex; align-items:center; justify-content:center; gap:12px; }
-  .btn{ appearance:none; border:none; background:var(--btn-bg); color:var(--btn-text); width:56px; height:56px; border-radius:12px; font-size:28px; font-weight:900; line-height:1; cursor:pointer; touch-action:manipulation; }
-  .btn:active{ transform:translateY(1px); }
-  .btn:focus-visible{ outline:3px solid var(--focus-ring); outline-offset:2px; }
-
-  /* 뷰포트 기반 기본 반응형(스케일 방식과 별개로 안전한 재배치만 담당) */
-  @media (max-width:700px){
-    .grid{ grid-template-columns: 1fr; }
-    .cell{ border-right:none; }
-    .label{ font-size:22px; }
-    .value{ font-size:72px; }
-    .meta{ grid-template-columns:1fr; }
-    .meta .row{ border-right:none; border-bottom:3px solid var(--line); }
-    .meta .row:last-child{ border-bottom:none; }
-    .btn{ width:64px; height:64px; font-size:30px; }
+  @media (orientation:portrait){
+    .meta{flex:0 0 clamp(120px,20vh,220px);grid-template-columns:1fr;} /* 한 열로 */
+    .grid{grid-template-columns:1fr;} /* 한 열로 */
   }
 </style>
 </head>
 <body>
-  <div class="stage">
-    <div class="scaleWrap">
-      <section class="slate" aria-label="영화 촬영 슬레이트">
-        <div class="top">
-          <a class="brandToggle" href="https://smartstore.naver.com/dekoboko" target="_blank" rel="noopener">DEKOBOKO</a>
-          <div class="controls">
-            <button class="smallBtn" id="resetCounts" aria-label="Scene/Cut/Take 값 초기화">↺ 리셋</button>
-            <button class="themeBtn" id="themeToggle" aria-pressed="false" aria-label="흑백 반전 테마 토글">◐ 색상반전</button>
-          </div>
+  <div class="wrap">
+    <section class="slate" aria-label="영화 촬영 슬레이트">
+      <div class="top">
+        <a class="brandToggle" href="https://smartstore.naver.com/dekoboko" target="_blank" rel="noopener">DEKOBOKO</a>
+        <div class="controls">
+          <button class="smallBtn" id="resetCounts" aria-label="Scene/Cut/Take 값 초기화">↺ 리셋</button>
+          <button class="themeBtn" id="themeToggle" aria-pressed="false" aria-label="흑백 반전 테마 토글">◐ 색상반전</button>
         </div>
+      </div>
 
-        <div class="meta">
-          <div class="row">
-            <label for="director">DIRECTOR</label>
-            <input id="director" placeholder="감독 이름" />
-          </div>
-          <div class="row">
-            <label for="prod">PRODUCTION / NOTE</label>
-            <input id="prod" placeholder="작품명 또는 메모" />
-          </div>
-          <div class="row">
-            <label for="date">DATE</label>
-            <input id="date" type="date" />
-          </div>
+      <div class="meta">
+        <div class="row">
+          <label for="director">DIRECTOR</label>
+          <input id="director" placeholder="감독 이름" />
         </div>
+        <div class="row">
+          <label for="prod">PRODUCTION / NOTE</label>
+          <input id="prod" placeholder="작품명 또는 메모" />
+        </div>
+        <div class="row">
+          <label for="date">DATE</label>
+          <input id="date" type="date" />
+        </div>
+      </div>
 
-        <div class="grid">
-          <div class="cell">
-            <div class="label">SCENE</div>
-            <div class="valueBox">
-              <div class="value" id="scene" tabindex="0" role="spinbutton" aria-label="Scene number" aria-valuemin="1" aria-valuemax="100" aria-valuenow="1">1</div>
-              <div class="btnRow">
-                <button class="btn" data-target="scene" data-step="-1" aria-label="Scene 감소">−</button>
-                <button class="btn" data-target="scene" data-step="1" aria-label="Scene 증가">+</button>
-              </div>
-            </div>
-          </div>
-          <div class="cell">
-            <div class="label">CUT</div>
-            <div class="valueBox">
-              <div class="value" id="cut" tabindex="0" role="spinbutton" aria-label="Cut number" aria-valuemin="1" aria-valuemax="100" aria-valuenow="1">1</div>
-              <div class="btnRow">
-                <button class="btn" data-target="cut" data-step="-1" aria-label="Cut 감소">−</button>
-                <button class="btn" data-target="cut" data-step="1" aria-label="Cut 증가">+</button>
-              </div>
-            </div>
-          </div>
-          <div class="cell">
-            <div class="label">TAKE</div>
-            <div class="valueBox">
-              <div class="value" id="take" tabindex="0" role="spinbutton" aria-label="Take number" aria-valuemin="1" aria-valuemax="100" aria-valuenow="1">1</div>
-              <div class="btnRow">
-                <button class="btn" data-target="take" data-step="-1" aria-label="Take 감소">−</button>
-                <button class="btn" data-target="take" data-step="1" aria-label="Take 증가">+</button>
-              </div>
+      <div class="grid">
+        <div class="cell">
+          <div class="label">SCENE</div>
+          <div class="valueBox">
+            <div class="value" id="scene" tabindex="0" role="spinbutton" aria-label="Scene number" aria-valuemin="1" aria-valuemax="100" aria-valuenow="1">1</div>
+            <div class="btnRow">
+              <button class="btn" data-target="scene" data-step="-1" aria-label="Scene 감소">−</button>
+              <button class="btn" data-target="scene" data-step="1" aria-label="Scene 증가">+</button>
             </div>
           </div>
         </div>
-      </section>
-    </div>
+        <div class="cell">
+          <div class="label">CUT</div>
+          <div class="valueBox">
+            <div class="value" id="cut" tabindex="0" role="spinbutton" aria-label="Cut number" aria-valuemin="1" aria-valuemax="100" aria-valuenow="1">1</div>
+            <div class="btnRow">
+              <button class="btn" data-target="cut" data-step="-1" aria-label="Cut 감소">−</button>
+              <button class="btn" data-target="cut" data-step="1" aria-label="Cut 증가">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="cell">
+          <div class="label">TAKE</div>
+          <div class="valueBox">
+            <div class="value" id="take" tabindex="0" role="spinbutton" aria-label="Take number" aria-valuemin="1" aria-valuemax="100" aria-valuenow="1">1</div>
+            <div class="btnRow">
+              <button class="btn" data-target="take" data-step="-1" aria-label="Take 감소">−</button>
+              <button class="btn" data-target="take" data-step="1" aria-label="Take 증가">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 
 <script>
 (function(){
   const MIN=1, MAX=100;
-  const $ = (s, r=document)=>r.querySelector(s);
-  const els={ scene:$('#scene'), cut:$('#cut'), take:$('#take'), director:$('#director'), prod:$('#prod'), date:$('#date'), themeBtn:$('#themeToggle'), resetBtn:$('#resetCounts'), stage:$('.stage'), scaleWrap:$('.scaleWrap'), slate:$('.slate') };
-
+  const $=(s, r=document)=>r.querySelector(s);
+  const els={scene:$('#scene'),cut:$('#cut'),take:$('#take'),director:$('#director'),prod:$('#prod'),date:$('#date'),themeBtn:$('#themeToggle'),resetBtn:$('#resetCounts')};
   const clampWrap=n=>n>MAX?MIN:n<MIN?MAX:n;
   const getVal=el=>Number(el.textContent)||MIN;
-  const setVal=(el,n)=>{ const v=clampWrap(parseInt(n,10)||MIN); el.textContent=String(v); el.setAttribute('aria-valuenow',String(v)); save(); maybeVibrate(); };
-  const step=(el,d)=>setVal(el, getVal(el)+d);
+  const setVal=(el,n)=>{const v=clampWrap(parseInt(n,10)||MIN);el.textContent=String(v);el.setAttribute('aria-valuenow',String(v));save();};
+  const step=(el,d)=>setVal(el,getVal(el)+d);
 
-  const KEY='slate-state-v8';
+  const KEY='slate-state-adaptive-stretch-v2';
   function save(){
-    const data={ scene:getVal(els.scene), cut:getVal(els.cut), take:getVal(els.take), director:els.director.value||'', prod:els.prod.value||'', date:els.date.value||'', theme:document.body.classList.contains('theme-invert') ? 'invert' : 'default' };
-    try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){}
+    const data={scene:getVal(els.scene),cut:getVal(els.cut),take:getVal(els.take),director:els.director.value||'',prod:els.prod.value||'',date:els.date.value||'',theme:document.body.classList.contains('theme-invert')?'invert':'default'};
+    try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){}
   }
   function load(){
     const raw=localStorage.getItem(KEY);
-    if(raw){
-      try{ const d=JSON.parse(raw); ['scene','cut','take'].forEach(k=> setVal(els[k], d[k]??MIN)); els.director.value=d.director||''; els.prod.value=d.prod||''; els.date.value=d.date||''; if(d.theme==='invert'){ document.body.classList.add('theme-invert'); els.themeBtn.setAttribute('aria-pressed','true'); } }catch(e){}
-    }
-    if(!els.date.value){ const t=new Date(); const m=String(t.getMonth()+1).padStart(2,'0'); const da=String(t.getDate()).padStart(2,'0'); els.date.value = `${t.getFullYear()}-${m}-${da}`; }
+    if(raw){try{const d=JSON.parse(raw);['scene','cut','take'].forEach(k=>setVal(els[k],d[k]||MIN));els.director.value=d.director||'';els.prod.value=d.prod||'';els.date.value=d.date||'';if(d.theme==='invert'){document.body.classList.add('theme-invert');els.themeBtn.setAttribute('aria-pressed','true');}}catch(e){}}
+    if(!els.date.value){const t=new Date();const m=String(t.getMonth()+1).padStart(2,'0');const da=String(t.getDate()).padStart(2,'0');els.date.value=`${t.getFullYear()}-${m}-${da}`;}
   }
 
-  // 입력 저장
-  [els.director, els.prod, els.date].forEach(inp=>{ inp.addEventListener('input', save); inp.addEventListener('change', save); });
+  [els.director,els.prod,els.date].forEach(inp=>{inp.addEventListener('input',save);inp.addEventListener('change',save);});
 
-  // 값 블록 키보드/휠/직접입력
-  ;[els.scene, els.cut, els.take].forEach(el=>{
-    el.addEventListener('keydown', e=>{
-      switch(e.key){
-        case 'ArrowUp': e.preventDefault(); step(el,+1); break;
-        case 'ArrowDown': e.preventDefault(); step(el,-1); break;
-        case 'PageUp': e.preventDefault(); step(el,+10); break;
-        case 'PageDown': e.preventDefault(); step(el,-10); break;
-        case 'Home': e.preventDefault(); setVal(el,MIN); break;
-        case 'End': e.preventDefault(); setVal(el,MAX); break;
-      }
-    });
-    el.addEventListener('wheel', e=>{ e.preventDefault(); const dy=e.deltaY||0; step(el, dy>0?-1:+1); }, {passive:false});
-    addDirectInput(el);
-  });
-
-  // +/- 버튼 롱프레스
-  const REPEAT_DELAY=400, REPEAT_RATE=120;
+  // 증감 버튼 (휠/드래그로는 변경 불가 유지)
   document.querySelectorAll('.btn').forEach(btn=>{
-    const targetId = btn.dataset.target; const delta = Number(btn.dataset.step); const targetEl = els[targetId];
-    let timer=null, rep=null;
-    const clearTimers=()=>{ if(timer){clearTimeout(timer); timer=null;} if(rep){clearInterval(rep); rep=null;} };
-    const press=()=>{ step(targetEl, delta); timer=setTimeout(()=>{ rep=setInterval(()=> step(targetEl, delta), REPEAT_RATE); }, REPEAT_DELAY); };
+    const targetId=btn.dataset.target;const delta=Number(btn.dataset.step);const targetEl=els[targetId];
+    let timer=null, rep=null; const REPEAT_DELAY=400, REPEAT_RATE=120;
+    const clearTimers=()=>{ if(timer){clearTimeout(timer);timer=null;} if(rep){clearInterval(rep);rep=null;} };
+    const press=()=>{ step(targetEl,delta); timer=setTimeout(()=>{ rep=setInterval(()=> step(targetEl,delta), REPEAT_RATE); }, REPEAT_DELAY); };
     const release=()=> clearTimers();
-    btn.addEventListener('click', ()=> step(targetEl, delta));
-    btn.addEventListener('pointerdown', press);
-    btn.addEventListener('pointerup', release);
-    btn.addEventListener('pointerleave', release);
-    btn.addEventListener('pointercancel', release);
+    btn.addEventListener('click',()=>step(targetEl,delta));
+    btn.addEventListener('pointerdown',press);
+    btn.addEventListener('pointerup',release);
+    btn.addEventListener('pointerleave',release);
+    btn.addEventListener('pointercancel',release);
   });
 
-  function addDirectInput(el){ let lastTap=0; el.addEventListener('click', ()=>{ const now=Date.now(); if(now-lastTap<300){ startInlineInput(el); } lastTap=now; }); el.addEventListener('dblclick', ()=> startInlineInput(el)); }
-  function startInlineInput(el){ const cur=getVal(el); const input=document.createElement('input'); input.type='number'; input.className='inlineInput'; input.min=String(MIN); input.max=String(MAX); input.value=String(cur); el.replaceWith(input); input.focus({preventScroll:true}); input.select();
-    const commit=()=>{ const v = clampWrap(parseInt(input.value,10)||cur); const restored = document.createElement('div'); restored.className='value'; restored.id = el.id; restored.tabIndex=0; restored.role='spinbutton'; restored.setAttribute('aria-label', el.getAttribute('aria-label')||'number'); restored.setAttribute('aria-valuemin', String(MIN)); restored.setAttribute('aria-valuemax', String(MAX)); restored.textContent=String(v); input.parentElement.replaceChild(restored, input); addDirectInput(restored); attachValueHandlers(restored); setVal(restored,v); };
+  // 숫자 직접 입력: 더블클릭(모바일은 빠른 탭 2회)
+  ;[els.scene,els.cut,els.take].forEach(el=>{
+    let lastTap=0; el.addEventListener('click',()=>{const now=Date.now(); if(now-lastTap<300){ startInlineInput(el); } lastTap=now;});
+    el.addEventListener('dblclick',()=> startInlineInput(el));
+  });
+  function startInlineInput(el){
+    const cur=getVal(el); const input=document.createElement('input');
+    input.type='number'; input.className='inlineInput'; input.min=String(MIN); input.max=String(MAX); input.value=String(cur);
+    el.replaceWith(input); input.focus({preventScroll:true}); input.select();
+    const commit=()=>{ const v=clampWrap(parseInt(input.value,10)||cur); const restored=document.createElement('div'); restored.className='value'; restored.id=el.id; restored.tabIndex=0; restored.role='spinbutton'; restored.setAttribute('aria-label',el.getAttribute('aria-label')||'number'); restored.setAttribute('aria-valuemin',String(MIN)); restored.setAttribute('aria-valuemax',String(MAX)); restored.textContent=String(v); input.parentElement.replaceChild(restored,input); attachInline(restored); setVal(restored,v); };
     const cancel=()=>{ input.value=String(cur); commit(); };
-    input.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); commit(); } if(e.key==='Escape'){ e.preventDefault(); cancel(); } });
-    input.addEventListener('blur', commit);
+    input.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();commit();} if(e.key==='Escape'){e.preventDefault();cancel();} });
+    input.addEventListener('blur',commit);
   }
-  function attachValueHandlers(el){
-    el.addEventListener('keydown', e=>{
-      switch(e.key){
-        case 'ArrowUp': e.preventDefault(); setVal(el, getVal(el)+1); break;
-        case 'ArrowDown': e.preventDefault(); setVal(el, getVal(el)-1); break;
-        case 'PageUp': e.preventDefault(); setVal(el, getVal(el)+10); break;
-        case 'PageDown': e.preventDefault(); setVal(el, getVal(el)-10); break;
-        case 'Home': e.preventDefault(); setVal(el,MIN); break;
-        case 'End': e.preventDefault(); setVal(el,MAX); break;
-      }
-    });
-    el.addEventListener('wheel', e=>{ e.preventDefault(); const dy=e.deltaY||0; setVal(el, getVal(el)+(dy>0?-1:+1)); }, {passive:false});
-  }
+  function attachInline(el){ let lastTap=0; el.addEventListener('click',()=>{const now=Date.now(); if(now-lastTap<300){ startInlineInput(el); } lastTap=now;}); el.addEventListener('dblclick',()=> startInlineInput(el)); }
 
   // 테마 토글
-  function applyThemeToggle(){ const inverted = document.body.classList.toggle('theme-invert'); $('#themeToggle').setAttribute('aria-pressed', inverted ? 'true' : 'false'); save(); }
-  $('#themeToggle').addEventListener('click', applyThemeToggle);
+  els.themeBtn.addEventListener('click',()=>{const inverted=document.body.classList.toggle('theme-invert');els.themeBtn.setAttribute('aria-pressed',inverted?'true':'false');save();});
 
-  // 진동
-  function maybeVibrate(){ if('vibrate' in navigator){ try{ navigator.vibrate(8); }catch(e){} } }
+  // 리셋
+  els.resetBtn.addEventListener('click',()=>{['scene','cut','take'].forEach(k=>setVal(els[k],MIN));});
 
-  // 리셋 버튼
-  $('#resetCounts').addEventListener('click', ()=>{ ['scene','cut','take'].forEach(k=> setVal(els[k], MIN)); });
-
-  // ===== 균일 스케일 맞춤 =====
-  function getViewport(){
-    if(window.visualViewport){ return { w: visualViewport.width, h: visualViewport.height }; }
-    return { w: window.innerWidth, h: window.innerHeight };
-  }
-  function applyUniformScale(){
-    const wrap = els.scaleWrap, slate = els.slate; if(!wrap||!slate) return;
-    // 스케일 초기화 후 자연 크기 측정
-    wrap.style.transform = 'scale(1) translate(0px,0px)';
-    const naturalW = slate.offsetWidth;
-    const naturalH = slate.offsetHeight;
-    const vp = getViewport();
-
-    const edge = 0; // 여백(필요시 8~16 추천)
-    const contain = Math.min((vp.w - edge*2) / naturalW, (vp.h - edge*2) / naturalH); // 전체 보이기
-    const cover   = Math.max((vp.w - edge*2) / naturalW, (vp.h - edge*2) / naturalH); // 화면 채우기(일부 크롭 가능)
-
-    // 자동 전환: contain 기준 여백이 눈에 띄면 cover로 채우기
-    const gutterW = (vp.w - naturalW*contain);
-    const gutterH = (vp.h - naturalH*contain);
-    const needCover = (gutterW > naturalW*0.02) || (gutterH > naturalH*0.02); // 2% 이상 여백이면 채우기
-    const scale = needCover ? cover : contain;
-
-    const dx = Math.max(0, (vp.w - naturalW*scale)/2);
-    const dy = Math.max(0, (vp.h - naturalH*scale)/2);
-    wrap.style.transform = `translate(${dx}px, ${dy}px) scale(${scale})`;
-  }px, ${dy}px) scale(${scale})`;
-  }
-  ['resize','orientationchange'].forEach(evt=> window.addEventListener(evt, applyUniformScale));
-  if(window.visualViewport){ visualViewport.addEventListener('resize', applyUniformScale); visualViewport.addEventListener('scroll', applyUniformScale); }
-
-  // 초기화
   load();
-  // 첫 렌더 뒤 한 프레임 지연 후 스케일 적용(측정 안정화)
-  requestAnimationFrame(()=>{ applyUniformScale(); setTimeout(applyUniformScale, 50); });
 })();
 </script>
 </body>
