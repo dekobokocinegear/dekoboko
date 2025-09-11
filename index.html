@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>웹 슬레이트 (Scene / Cut / Take) – Invert Theme · 개선판</title>
+<title>웹 슬레이트 (Scene / Cut / Take) – Invert Theme · iPhone 대응</title>
 <style>
   :root{
     --line:#fff;
@@ -14,6 +14,7 @@
     --btn-border:var(--line);
     --btn-text:var(--label);
     --focus-ring:rgba(127,127,127,.45);
+    --meta-h:96px;
   }
   .theme-invert{
     --line:#000;
@@ -40,11 +41,12 @@
   .themeBtn:focus-visible,.smallBtn:focus-visible{ outline:3px solid var(--focus-ring); outline-offset:2px; }
 
   .meta{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:0; border-bottom:3px solid var(--line); }
-  .meta .row{ display:flex; flex-direction:column; justify-content:stretch; padding:10px 12px; border-right:3px solid var(--line); }
+  .meta .row{ display:flex; flex-direction:column; justify-content:stretch; padding:10px 12px; border-right:3px solid var(--line); height:var(--meta-h); }
   .meta .row:last-child{border-right:none;}
   .meta label{ font:800 9px/1 var(--label); letter-spacing:.08em; margin-bottom:6px }
-  .meta input{ flex:1; min-width:0; background:transparent; color:var(--label); border:none; border-radius:0; font-size:16px; font-weight:800; padding:18px 0px; height:96px; }
+  .meta input{ flex:1; min-width:0; background:transparent; color:var(--label); border:none; border-radius:0; font-size:16px; font-weight:800; padding:18px 0px; height:calc(var(--meta-h) - 36px); line-height:1.2; }
   .meta input::placeholder{color:#9ca3af; opacity:.9; font-weight:800}
+  input[type="date"]{ -webkit-appearance:none; appearance:none; }
 
   .grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:0; }
   .cell{ padding:18px 18px 22px; border-right:3px solid var(--line); border-bottom:3px solid var(--line); min-height:148px; display:flex; flex-direction:column; gap:12px; align-items:center; }
@@ -63,6 +65,12 @@
   .btn:active{ transform:translateY(1px); }
   .btn:focus-visible{ outline:3px solid var(--focus-ring); outline-offset:2px; }
 
+  @media (max-width:430px){ /* iPhone 15 Pro 대응 */
+    :root{ --meta-h:84px; }
+    .meta input{ font-size:14px; height:calc(var(--meta-h) - 28px); padding:14px 0; }
+    .value{ font-size:64px; }
+  }
+
   @media (max-width:700px){
     .grid{ grid-template-columns: 1fr; }
     .cell{ border-right:none; }
@@ -71,7 +79,6 @@
     .meta{ grid-template-columns:1fr; }
     .meta .row{ border-right:none; border-bottom:3px solid var(--line); }
     .meta .row:last-child{ border-bottom:none; }
-    .meta input{ font-size:16px; }
     .btn{ width:64px; height:64px; font-size:30px; }
   }
 </style>
@@ -161,10 +168,8 @@
     if(!els.date.value){ const t=new Date(); const m=String(t.getMonth()+1).padStart(2,'0'); const da=String(t.getDate()).padStart(2,'0'); els.date.value = `${t.getFullYear()}-${m}-${da}`; }
   }
 
-  // basic input persistence
   [els.director, els.prod, els.date].forEach(inp=>{ inp.addEventListener('input', save); inp.addEventListener('change', save); });
 
-  // make value blocks keyboard friendly + direct edit
   [els.scene, els.cut, els.take].forEach(el=>{
     el.addEventListener('keydown', e=>{
       switch(e.key){
@@ -176,12 +181,10 @@
         case 'End': e.preventDefault(); setVal(el,MAX); break;
       }
     });
-    // wheel to change
     el.addEventListener('wheel', e=>{ e.preventDefault(); const dy=e.deltaY||0; step(el, dy>0?-1:+1); }, {passive:false});
     addDirectInput(el);
   });
 
-  // plus/minus buttons + long-press repeat
   const REPEAT_DELAY=400, REPEAT_RATE=120;
   document.querySelectorAll('.btn').forEach(btn=>{
     const targetId = btn.dataset.target; const delta = Number(btn.dataset.step); const targetEl = els[targetId];
@@ -222,10 +225,8 @@
   function applyThemeToggle(){ const inverted = document.body.classList.toggle('theme-invert'); els.themeBtn.setAttribute('aria-pressed', inverted ? 'true' : 'false'); save(); }
   els.themeBtn.addEventListener('click', applyThemeToggle);
 
-  // simple haptic feedback (best-effort)
   function maybeVibrate(){ if('vibrate' in navigator){ try{ navigator.vibrate(8); }catch(e){} } }
 
-  // reset counts only
   els.resetBtn.addEventListener('click', ()=>{ ['scene','cut','take'].forEach(k=> setVal(els[k], MIN)); });
 
   load();
