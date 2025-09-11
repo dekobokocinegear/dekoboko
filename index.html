@@ -3,61 +3,62 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover" />
-<title>웹 슬레이트 (Scene / Cut / Take) – Adaptive Fullscreen Stretch</title>
+<title>웹 슬레이트 (Scene / Cut / Take) – Scroll + Inline Edit (0–999)</title>
 <style>
   :root{
     --line:#fff; --board:#000; --label:#fff; --value:#fff;
     --btn-bg:transparent; --btn-border:var(--line); --btn-text:var(--label);
     --focus-ring:rgba(127,127,127,.45);
+    --scroll-nudge:0px;
   }
-  .theme-invert{
-    --line:#000; --board:#fff; --label:#000; --value:#000;
-    --btn-bg:transparent; --btn-border:var(--line); --btn-text:var(--label);
-    --focus-ring:rgba(0,0,0,.35);
-  }
+  @media (pointer:coarse){ :root{ --scroll-nudge:96px; } }
+
+  .theme-invert{ --line:#000; --board:#fff; --label:#000; --value:#000; }
 
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{width:100%;min-height:100dvh;background:var(--board);color:var(--label);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,Helvetica,Arial,sans-serif;overflow-y:auto}
+  html,body{
+    width:100%; min-height:100dvh;
+    background:var(--board); color:var(--label);
+    font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,Helvetica,Arial,sans-serif;
+    overflow-y:auto;
+  }
 
-  .wrap{width:100%;height:100svh;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
-  .slate{background:var(--board);width:100%;height:100%;border-radius:0;box-shadow:none;border:none;display:flex;flex-direction:column;}
+  .wrap{min-height:100dvh;display:flex;align-items:center;justify-content:center;flex-direction:column;}
+  .slate{background:var(--board);width:100%;max-width:920px;border:none;display:flex;flex-direction:column;}
 
-  .top{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:3px solid var(--line);font-weight:800;}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:3px solid var(--line);font-weight:800;}
   .brandToggle{color:var(--btn-text);text-decoration:none;padding:6px 10px;border:2px solid var(--btn-border);border-radius:10px;}
-  .midHint{flex:1;text-align:center;font-weight:300;font-size:10px;opacity:.7;letter-spacing:.02em;white-space:nowrap;}
+  .midHint{flex:1;text-align:center;font-weight:300;font-size:12px;opacity:.7;letter-spacing:.02em;white-space:nowrap;}
   .controls{display:flex;gap:8px;}
-  .themeBtn,.smallBtn{appearance:none;border:2px solid var(--btn-border);background:var(--btn-bg);color:var(--btn-text);padding:6px 10px;border-radius:10px;font-weight:800;cursor:pointer;line-height:1;white-space:nowrap;font-size:clamp(12px,1.4vw,16px);} 
+  .themeBtn,.smallBtn{border:2px solid var(--btn-border);background:var(--btn-bg);color:var(--btn-text);padding:6px 10px;border-radius:10px;font-weight:800;cursor:pointer;}
+  .themeBtn:focus-visible,.smallBtn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
+  .brandToggle{color:var(--btn-text);text-decoration:none;padding:6px 10px;border:2px solid var(--btn-border);border-radius:10px;}
+  .controls{display:flex;gap:8px;}
+  .themeBtn,.smallBtn{border:2px solid var(--btn-border);background:var(--btn-bg);color:var(--btn-text);padding:6px 10px;border-radius:10px;font-weight:800;cursor:pointer;}
   .themeBtn:focus-visible,.smallBtn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
 
-  /* 메타: 내부 칸 구분선 제거 */
-  .meta{flex:0 0 clamp(90px,15vh,160px);display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:3px solid var(--line);} 
-  .meta .row{display:flex;flex-direction:column;justify-content:center;padding:clamp(8px,1vh,12px) clamp(10px,2vw,16px);} 
-  .meta label{font:800 clamp(10px,1.2vw,14px)/1 var(--label);letter-spacing:.08em;margin-bottom:4px}
-  .meta input{flex:1;background:transparent;color:var(--label);border:none;font-size:clamp(14px,2vw,24px);font-weight:800;padding:0;min-width:0;}
-  .meta input::placeholder{color:#9ca3af;opacity:.9;font-weight:800}
-  input[type="date"]{-webkit-appearance:none;appearance:none;}
+  .meta{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:3px solid var(--line);}
+  .meta .row{display:flex;flex-direction:column;padding:10px;}
+  .meta label{font:800 11px/1 var(--label);margin-bottom:4px;}
+  .meta input{background:transparent;color:var(--label);border:none;font-size:16px;font-weight:800;}
+  .meta input::placeholder{color:#9ca3af;}
 
   .grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);} 
-  .cell{padding:clamp(10px,2.2vh,24px);border-right:3px solid var(--line);border-bottom:3px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,1.4vh,16px);} 
+  .cell{padding:16px;border-right:3px solid var(--line);border-bottom:3px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
   .cell:last-child{border-right:none;}
 
-  .label{font-size:clamp(18px,3vw,32px);font-weight:900;color:var(--label);letter-spacing:.12em;}
-  .valueBox{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;flex-direction:row;} 
-  .value{border:none;padding:clamp(8px,2vh,28px);width:100%;text-align:center;font-weight:900;font-size:clamp(56px,12vw,140px);line-height:1;color:var(--value);user-select:none;cursor:pointer;outline:none;}
+  .label{font-size:22px;font-weight:900;}
+  .valueBox{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;}
+  .value{flex:1;text-align:center;font-weight:900;line-height:1;color:var(--value);user-select:none;font-size:96px;white-space:nowrap;}
+  .btn{border:none;background:transparent;color:#9ca3af;width:56px;height:56px;border-radius:12px;font-size:32px;font-weight:900;cursor:pointer;touch-action:manipulation;}
+  .btn:active{transform:translateY(1px);} .btn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
 
-  .inlineInput{width:60%;text-align:center;font-weight:900;font-size:clamp(40px,10vw,120px);padding:clamp(6px,1.8vh,18px);background:transparent;color:var(--value);border:2px solid var(--line);} 
+  .scrollNudge{height:var(--scroll-nudge);flex:0 0 auto;}
 
-  .btnRow{display:none;}  
-  .btn{appearance:none;border:none;background:var(--btn-bg);color:#aaa;width:clamp(48px,12vw,120px);height:clamp(48px,12vw,120px);border-radius:12px;font-size:clamp(20px,6vw,56px);font-weight:900;cursor:pointer;touch-action:manipulation;} 
-  .btn:active{transform:translateY(1px);} 
-  .btn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
-
-  /* Scroll nudge to allow address bar to hide */
-  .scrollNudge{height:96px;flex:0 0 auto;} 
-
-  @media (orientation:portrait){
-    .meta{flex:0 0 clamp(120px,20vh,220px);grid-template-columns:1fr;} /* 한 열로 */
-    .grid{grid-template-columns:1fr;} /* 한 열로 */
+  @media (max-width:700px){
+    .grid{grid-template-columns:1fr;}
+    .label{font-size:20px;}
+    .btn{width:48px;height:48px;font-size:28px;}
   }
 </style>
 </head>
@@ -66,7 +67,7 @@
     <section class="slate" aria-label="영화 촬영 슬레이트">
       <div class="top">
         <a class="brandToggle" href="https://smartstore.naver.com/dekoboko" target="_blank" rel="noopener">DEKOBOKO</a>
-        <div class="midHint" aria-hidden="true">⬆ 주소창을 없애려면 위로 살짝 스와이프 하세요</div>
+        <div class="midHint" aria-hidden="true">주소창을 없애려면 위로 살짝 스와이프 하세요</div>
         <div class="controls">
           <button class="smallBtn" id="resetCounts">↺ 리셋</button>
           <button class="themeBtn" id="themeToggle" aria-pressed="false">◐ 색상반전</button>
@@ -92,10 +93,25 @@
         <div class="cell">
           <div class="label">SCENE</div>
           <div class="valueBox">
+            <button class="btn" data-target="scene" data-step="-1">−</button>
+            <div class="value" id="scene" tabindex="0" role="spinbutton" aria-label="Scene number" aria-valuemin="0" aria-valuemax="999" aria-valuenow="0">0</div>
+            <button class="btn" data-target="scene" data-step="1">+</button>
+          </div>
+        </div>
+        <div class="cell">
+          <div class="label">CUT</div>
+          <div class="valueBox">
+            <button class="btn" data-target="cut" data-step="-1">−</button>
+            <div class="value" id="cut" tabindex="0" role="spinbutton" aria-label="Cut number" aria-valuemin="0" aria-valuemax="999" aria-valuenow="0">0</div>
+            <button class="btn" data-target="cut" data-step="1">+</button>
+          </div>
+        </div>
+        <div class="cell">
+          <div class="label">TAKE</div>
+          <div class="valueBox">
             <button class="btn" data-target="take" data-step="-1">−</button>
             <div class="value" id="take" tabindex="0" role="spinbutton" aria-label="Take number" aria-valuemin="0" aria-valuemax="999" aria-valuenow="0">0</div>
             <button class="btn" data-target="take" data-step="1">+</button>
-          </div>
           </div>
         </div>
       </div>
@@ -106,49 +122,119 @@
 <script>
 (function(){
   const MIN=0, MAX=999;
-  const $=(s,r=document)=>r.querySelector(s);
-  const els={scene:$('#scene'),cut:$('#cut'),take:$('#take'),director:$('#director'),prod:$('#prod'),date:$('#date'),themeBtn:$('#themeToggle'),resetBtn:$('#resetCounts')};
-  const clampWrap=n=>n>MAX?MAX:n<MIN?MIN:n;
-  const getVal=el=>Number(el.textContent)||MIN;
-  const setVal=(el,n)=>{const v=clampWrap(parseInt(n,10)||MIN);el.textContent=String(v);el.setAttribute('aria-valuenow',String(v));save();};
-  const step=(el,d)=>setVal(el,getVal(el)+d);
+  const $=s=>document.querySelector(s);
+  const els={
+    scene:$('#scene'), cut:$('#cut'), take:$('#take'),
+    director:$('#director'), prod:$('#prod'), date:$('#date'),
+    themeBtn:$('#themeToggle'), resetBtn:$('#resetCounts')
+  };
 
-  const KEY='slate-state-adaptive-stretch-v3';
+  const clamp=n=>Math.min(MAX,Math.max(MIN,n));
+  const getVal=el=>Number(el.textContent)||MIN;
+
+  function setVal(el,n){
+    const v = clamp(parseInt(n,10));
+    const safe = Number.isFinite(v) ? v : MIN;
+    el.textContent = String(safe);
+    el.setAttribute('aria-valuenow', String(safe));
+    save();
+  }
+  const step=(el,d)=>setVal(el, getVal(el)+d);
+
+  const KEY='slate-scroll-inline-0to999-v1';
   function save(){
-    const data={scene:getVal(els.scene),cut:getVal(els.cut),take:getVal(els.take),director:els.director.value||'',prod:els.prod.value||'',date:els.date.value||'',theme:document.body.classList.contains('theme-invert')?'invert':'default'};
-    try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){}
+    const data={
+      scene:getVal(els.scene), cut:getVal(els.cut), take:getVal(els.take),
+      director:els.director.value||'', prod:els.prod.value||'', date:els.date.value||'',
+      theme:document.body.classList.contains('theme-invert')?'invert':'default'
+    };
+    try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){}
   }
   function load(){
     const raw=localStorage.getItem(KEY);
-    if(raw){try{const d=JSON.parse(raw);['scene','cut','take'].forEach(k=>setVal(els[k],d[k]||MIN));els.director.value=d.director||'';els.prod.value=d.prod||'';els.date.value=d.date||'';if(d.theme==='invert'){document.body.classList.add('theme-invert');els.themeBtn.setAttribute('aria-pressed','true');}}catch(e){}}
-    if(!els.date.value){const t=new Date();const m=String(t.getMonth()+1).padStart(2,'0');const da=String(t.getDate()).padStart(2,'0');els.date.value=`${t.getFullYear()}-${m}-${da}`;}
+    if(raw){ try{
+      const d=JSON.parse(raw);
+      ['scene','cut','take'].forEach(k=> setVal(els[k], d[k]??MIN));
+      els.director.value=d.director||''; els.prod.value=d.prod||''; els.date.value=d.date||'';
+      if(d.theme==='invert'){
+        document.body.classList.add('theme-invert');
+        els.themeBtn.setAttribute('aria-pressed','true');
+      }
+    }catch(e){} }
+    if(!els.date.value){
+      const t=new Date(), m=String(t.getMonth()+1).padStart(2,'0'), da=String(t.getDate()).padStart(2,'0');
+      els.date.value=`${t.getFullYear()}-${m}-${da}`;
+    }
   }
 
-  [els.director,els.prod,els.date].forEach(inp=>{inp.addEventListener('input',save);inp.addEventListener('change',save);});
-
+  // +/- 버튼 (클릭만, 휠/드래그 미사용)
   document.querySelectorAll('.btn').forEach(btn=>{
-    const targetId=btn.dataset.target;const delta=Number(btn.dataset.step);const targetEl=els[targetId];
-    btn.addEventListener('click',()=>step(targetEl,delta));
+    const t=btn.dataset.target, delta=Number(btn.dataset.step), el=els[t];
+    btn.addEventListener('click',()=> step(el, delta));
   });
 
-  ;[els.scene,els.cut,els.take].forEach(el=>{
-    let lastTap=0; el.addEventListener('click',()=>{const now=Date.now(); if(now-lastTap<300){ startInlineInput(el); } lastTap=now;});
-    el.addEventListener('dblclick',()=> startInlineInput(el));
+  // 테마 토글
+  els.themeBtn.addEventListener('click',()=>{
+    const inverted = document.body.classList.toggle('theme-invert');
+    els.themeBtn.setAttribute('aria-pressed', inverted?'true':'false');
+    save();
   });
-  function startInlineInput(el){
-    const cur=getVal(el); const input=document.createElement('input');
-    input.type='number'; input.className='inlineInput'; input.min=String(MIN); input.max=String(MAX); input.value=String(cur);
-    el.replaceWith(input); input.focus({preventScroll:true}); input.select();
-    const commit=()=>{ const v=clampWrap(parseInt(input.value,10)||cur); const restored=document.createElement('div'); restored.className='value'; restored.id=el.id; restored.tabIndex=0; restored.role='spinbutton'; restored.setAttribute('aria-label',el.getAttribute('aria-label')||'number'); restored.setAttribute('aria-valuemin',String(MIN)); restored.setAttribute('aria-valuemax',String(MAX)); restored.textContent=String(v); input.parentElement.replaceChild(restored,input); attachInline(restored); setVal(restored,v); };
-    const cancel=()=>{ input.value=String(cur); commit(); };
-    input.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();commit();} if(e.key==='Escape'){e.preventDefault();cancel();} });
-    input.addEventListener('blur',commit);
+
+  // 리셋
+  els.resetBtn.addEventListener('click',()=>{
+    ['scene','cut','take'].forEach(k=> setVal(els[k], MIN));
+  });
+
+  // 입력 저장
+  [els.director, els.prod, els.date].forEach(inp=> inp.addEventListener('input', save));
+
+  // ===== 더블 탭/더블 클릭 → 직접 입력 =====
+  ['scene','cut','take'].forEach(id=> attachInlineEdit(els[id]));
+
+  function attachInlineEdit(el){
+    let lastTap=0;
+    el.addEventListener('click', ()=>{
+      const now=Date.now();
+      if(now-lastTap<300){ startInlineInput(el); }
+      lastTap=now;
+    });
+    el.addEventListener('dblclick', ()=> startInlineInput(el));
   }
-  function attachInline(el){ let lastTap=0; el.addEventListener('click',()=>{const now=Date.now(); if(now-lastTap<300){ startInlineInput(el); } lastTap=now;}); el.addEventListener('dblclick',()=> startInlineInput(el)); }
 
-  els.themeBtn.addEventListener('click',()=>{const inverted=document.body.classList.toggle('theme-invert');els.themeBtn.setAttribute('aria-pressed',inverted?'true':'false');save();});
+  function startInlineInput(displayEl){
+    const cur = getVal(displayEl);
+    const input = document.createElement('input');
+    input.type='number'; input.min=String(MIN); input.max=String(MAX);
+    input.value=String(cur); input.className='inlineInputTemp';
+    // 인라인 입력 스타일: value와 유사하게 중앙정렬 (간단한 임베디드 스타일)
+    Object.assign(input.style,{
+      width:'60%', textAlign:'center', fontWeight:'900', fontSize:'48px',
+      padding:'6px 8px', background:'transparent', color:'var(--value)', border:'2px solid var(--line)'
+    });
 
-  els.resetBtn.addEventListener('click',()=>{['scene','cut','take'].forEach(k=>setVal(els[k],MIN));});
+    const parent = displayEl.parentElement;
+    parent.replaceChild(input, displayEl);
+    input.focus({preventScroll:true}); input.select();
+
+    const commit=()=>{
+      const v = clamp(parseInt(input.value,10));
+      const restored = document.createElement('div');
+      restored.className='value'; restored.id=displayEl.id; restored.tabIndex=0;
+      restored.role='spinbutton'; restored.setAttribute('aria-label', displayEl.getAttribute('aria-label')||'number');
+      restored.setAttribute('aria-valuemin', String(MIN)); restored.setAttribute('aria-valuemax', String(MAX));
+      restored.textContent=String(Number.isFinite(v)?v:cur);
+      parent.replaceChild(restored, input);
+      attachInlineEdit(restored);
+      setVal(restored, restored.textContent);
+    };
+    const cancel=()=>{ input.value=String(cur); commit(); };
+
+    input.addEventListener('keydown', e=>{
+      if(e.key==='Enter'){ e.preventDefault(); commit(); }
+      if(e.key==='Escape'){ e.preventDefault(); cancel(); }
+    });
+    input.addEventListener('blur', commit);
+  }
 
   load();
 })();
