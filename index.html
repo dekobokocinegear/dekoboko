@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover" />
-<title>웹 슬레이트 (Scene / Cut / Take) – Scroll + Auto Fit</title>
+<title>웹 슬레이트 (Scene / Cut / Take) – Scroll 0~999</title>
 <style>
   :root{
     --line:#fff; --board:#000; --label:#fff; --value:#fff;
@@ -42,31 +42,12 @@
   .cell:last-child{border-right:none;}
 
   .label{font-size:22px;font-weight:900;}
-  .valueBox{
-    display:flex;align-items:center;justify-content:center;gap:12px;
-    width:100%;
-  }
-  .value{
-    flex:1;
-    text-align:center;
-    font-weight:900;
-    line-height:1;
-    color:var(--value);
-    user-select:none;
-    white-space:nowrap;      /* 한 줄 유지 */
-    overflow:hidden;         /* 넘침 숨김 */
-    text-overflow:clip;
-    font-size:96px;          /* 시작점(최대치) – JS가 맞춰줌 */
-  }
-  .btn{
-    border:none;background:transparent;color:#9ca3af;
-    width:56px;height:56px;border-radius:12px;font-size:32px;
-    font-weight:900;cursor:pointer;touch-action:manipulation;
-  }
+  .valueBox{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;}
+  .value{flex:1;text-align:center;font-weight:900;line-height:1;color:var(--value);user-select:none;font-size:96px;}
+  .btn{border:none;background:transparent;color:#9ca3af;width:56px;height:56px;border-radius:12px;font-size:32px;font-weight:900;cursor:pointer;touch-action:manipulation;}
   .btn:active{transform:translateY(1px);}
   .btn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
 
-  /* 모바일 세로에선 한 열로 */
   @media (max-width:700px){
     .grid{grid-template-columns:1fr;}
     .label{font-size:20px;}
@@ -105,7 +86,7 @@
           <div class="label">SCENE</div>
           <div class="valueBox">
             <button class="btn" data-target="scene" data-step="-1">−</button>
-            <div class="value" id="scene">1</div>
+            <div class="value" id="scene">0</div>
             <button class="btn" data-target="scene" data-step="1">+</button>
           </div>
         </div>
@@ -113,7 +94,7 @@
           <div class="label">CUT</div>
           <div class="valueBox">
             <button class="btn" data-target="cut" data-step="-1">−</button>
-            <div class="value" id="cut">1</div>
+            <div class="value" id="cut">0</div>
             <button class="btn" data-target="cut" data-step="1">+</button>
           </div>
         </div>
@@ -121,7 +102,7 @@
           <div class="label">TAKE</div>
           <div class="valueBox">
             <button class="btn" data-target="take" data-step="-1">−</button>
-            <div class="value" id="take">1</div>
+            <div class="value" id="take">0</div>
             <button class="btn" data-target="take" data-step="1">+</button>
           </div>
         </div>
@@ -131,7 +112,7 @@
 
 <script>
 (function(){
-  const MIN=0, MAX=999; // 범위
+  const MIN=0, MAX=999;
   const $=s=>document.querySelector(s);
   const els={
     scene:$('#scene'), cut:$('#cut'), take:$('#take'),
@@ -141,18 +122,14 @@
 
   const clamp=n=>Math.min(MAX,Math.max(MIN,n));
   const getVal=el=>Number(el.textContent)||MIN;
-
-  // 값 설정 + 저장 + 폰트 핏
   const setVal=(el,n)=>{
     const v=clamp(parseInt(n,10));
     el.textContent=String(isNaN(v)?MIN:v);
     save();
-    fitValue(el);
   };
   const step=(el,d)=>setVal(el,getVal(el)+d);
 
-  // 로컬 스토리지
-  const KEY='slate-scroll-fit-v1';
+  const KEY='slate-scroll-0to999';
   function save(){
     const data={
       scene:getVal(els.scene), cut:getVal(els.cut), take:getVal(els.take),
@@ -172,64 +149,27 @@
         els.themeBtn.setAttribute('aria-pressed','true');
       }
     }catch(e){} }
-    // 날짜 기본값
     if(!els.date.value){
       const t=new Date(), m=String(t.getMonth()+1).padStart(2,'0'), da=String(t.getDate()).padStart(2,'0');
-      els.date.value = `${t.getFullYear()}-${m}-${da}`;
+      els.date.value=`${t.getFullYear()}-${m}-${da}`;
     }
-    // 첫 렌더 후 전체 핏
-    fitAll();
   }
 
-  // 버튼 클릭
   document.querySelectorAll('.btn').forEach(btn=>{
     const t=btn.dataset.target, delta=Number(btn.dataset.step), el=els[t];
     btn.addEventListener('click',()=>step(el,delta));
   });
 
-  // 테마 토글
   els.themeBtn.addEventListener('click',()=>{
     const inverted=document.body.classList.toggle('theme-invert');
     els.themeBtn.setAttribute('aria-pressed', inverted?'true':'false');
     save();
   });
 
-  // 리셋
   els.resetBtn.addEventListener('click',()=>{
     ['scene','cut','take'].forEach(k=> setVal(els[k], MIN));
   });
 
-  // ===== 숫자 자동 폰트 핏 =====
-  function fitValue(el){
-    // 레이아웃에서 valueBox가 가용폭을 제공
-    const box = el.parentElement;             // .valueBox
-    const maxWidth = box.clientWidth - 140;   // 좌우 버튼(각 56px) + 여백 감안 (보수적으로 140)
-    const maxHeight = box.parentElement.clientHeight * 0.7; // 셀 높이의 70% 정도를 최대 폰트 높이로
-
-    let size = Math.min(120, parseFloat(getComputedStyle(el).fontSize) || 96);
-    const minSize = 36;
-
-    // 먼저 크게 설정
-    el.style.fontSize = size + 'px';
-
-    // 줄여가며 맞춤 (최대 20회)
-    let guard = 20;
-    while(guard-- > 0 && (el.scrollWidth > maxWidth || el.scrollHeight > maxHeight) && size > minSize){
-      size -= 4;
-      el.style.fontSize = size + 'px';
-    }
-  }
-  function fitAll(){
-    [els.scene, els.cut, els.take].forEach(fitValue);
-  }
-
-  // 리사이즈/회전 시 재맞춤 (디바운스)
-  let rAF=null;
-  const onResize=()=>{ if(rAF) cancelAnimationFrame(rAF); rAF=requestAnimationFrame(fitAll); };
-  window.addEventListener('resize', onResize);
-  window.addEventListener('orientationchange', onResize);
-
-  // 입력 변화 저장
   [els.director, els.prod, els.date].forEach(inp=> inp.addEventListener('input', save));
 
   load();
