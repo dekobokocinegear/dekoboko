@@ -26,18 +26,14 @@
   .wrap{min-height:100dvh;display:flex;align-items:center;justify-content:center;flex-direction:column;}
   .slate{background:var(--board);width:100%;max-width:920px;border:none;display:flex;flex-direction:column;}
 
-  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:3px solid var(--line);font-weight:800;}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 20px 24px;border-bottom:3px solid var(--line);font-weight:800;}
   .brandToggle{color:var(--btn-text);text-decoration:none;padding:6px 10px;border:2px solid var(--btn-border);border-radius:10px;}
-  .midHint{flex:1;text-align:center;font-weight:300;font-size:12px;opacity:.7;letter-spacing:.02em;white-space:nowrap;}
-  .controls{display:flex;gap:8px;}
-  .themeBtn,.smallBtn{border:2px solid var(--btn-border);background:var(--btn-bg);color:var(--btn-text);padding:6px 10px;border-radius:10px;font-weight:800;cursor:pointer;}
-  .themeBtn:focus-visible,.smallBtn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
-  .brandToggle{color:var(--btn-text);text-decoration:none;padding:6px 10px;border:2px solid var(--btn-border);border-radius:10px;}
+  .midHint{flex:1;text-align:center;font-weight:300;font-size:10px;opacity:.7;letter-spacing:.02em;white-space:nowrap;}
   .controls{display:flex;gap:8px;}
   .themeBtn,.smallBtn{border:2px solid var(--btn-border);background:var(--btn-bg);color:var(--btn-text);padding:6px 10px;border-radius:10px;font-weight:800;cursor:pointer;}
   .themeBtn:focus-visible,.smallBtn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
 
-  .meta{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:3px solid var(--line);}
+  .meta{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:3px solid var(--line);margin-top:16px;}
   .meta .row{display:flex;flex-direction:column;padding:10px;}
   .meta label{font:800 11px/1 var(--label);margin-bottom:4px;}
   .meta input{background:transparent;color:var(--label);border:none;font-size:16px;font-weight:800;}
@@ -67,7 +63,7 @@
     <section class="slate" aria-label="영화 촬영 슬레이트">
       <div class="top">
         <a class="brandToggle" href="https://smartstore.naver.com/dekoboko" target="_blank" rel="noopener">DEKOBOKO</a>
-        <div class="midHint" aria-hidden="true">주소창을 없애려면 위로 살짝 스와이프 하세요</div>
+        <div class="midHint" aria-hidden="true">⬆ 주소창을 없애려면 위로 살짝 스와이프 하세요</div>
         <div class="controls">
           <button class="smallBtn" id="resetCounts">↺ 리셋</button>
           <button class="themeBtn" id="themeToggle" aria-pressed="false">◐ 색상반전</button>
