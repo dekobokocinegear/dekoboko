@@ -2,8 +2,8 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>웹 슬레이트 (Scene / Cut / Take) – Scroll Enabled</title>
+<meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover" />
+<title>웹 슬레이트 (Scene / Cut / Take) – Scroll + Auto Fit</title>
 <style>
   :root{
     --line:#fff; --board:#000; --label:#fff; --value:#fff;
@@ -12,8 +12,6 @@
   }
   .theme-invert{
     --line:#000; --board:#fff; --label:#000; --value:#000;
-    --btn-bg:transparent; --btn-border:var(--line); --btn-text:var(--label);
-    --focus-ring:rgba(0,0,0,.35);
   }
 
   *{box-sizing:border-box;margin:0;padding:0}
@@ -31,6 +29,7 @@
   .brandToggle{color:var(--btn-text);text-decoration:none;padding:6px 10px;border:2px solid var(--btn-border);border-radius:10px;}
   .controls{display:flex;gap:8px;}
   .themeBtn,.smallBtn{border:2px solid var(--btn-border);background:var(--btn-bg);color:var(--btn-text);padding:6px 10px;border-radius:10px;font-weight:800;cursor:pointer;}
+  .themeBtn:focus-visible,.smallBtn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
 
   .meta{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:3px solid var(--line);}
   .meta .row{display:flex;flex-direction:column;padding:10px;}
@@ -43,13 +42,36 @@
   .cell:last-child{border-right:none;}
 
   .label{font-size:22px;font-weight:900;}
-  .valueBox{display:flex;align-items:center;justify-content:center;gap:12px;}
-  .value{font-size:72px;font-weight:900;user-select:none;}
-  .btn{border:none;background:transparent;color:#9ca3af;font-size:32px;font-weight:900;cursor:pointer;}
+  .valueBox{
+    display:flex;align-items:center;justify-content:center;gap:12px;
+    width:100%;
+  }
+  .value{
+    flex:1;
+    text-align:center;
+    font-weight:900;
+    line-height:1;
+    color:var(--value);
+    user-select:none;
+    white-space:nowrap;      /* 한 줄 유지 */
+    overflow:hidden;         /* 넘침 숨김 */
+    text-overflow:clip;
+    font-size:96px;          /* 시작점(최대치) – JS가 맞춰줌 */
+  }
+  .btn{
+    border:none;background:transparent;color:#9ca3af;
+    width:56px;height:56px;border-radius:12px;font-size:32px;
+    font-weight:900;cursor:pointer;touch-action:manipulation;
+  }
   .btn:active{transform:translateY(1px);}
-  
-  /* 아래 스크롤 유도 영역 */
-  .scrollNudge{height:96px;flex:0 0 auto;}
+  .btn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
+
+  /* 모바일 세로에선 한 열로 */
+  @media (max-width:700px){
+    .grid{grid-template-columns:1fr;}
+    .label{font-size:20px;}
+    .btn{width:48px;height:48px;font-size:28px;}
+  }
 </style>
 </head>
 <body>
@@ -105,48 +127,110 @@
         </div>
       </div>
     </section>
-    <div class="scrollNudge"></div>
   </div>
 
 <script>
 (function(){
-  const MIN=1,MAX=100;
+  const MIN=0, MAX=999; // 범위
   const $=s=>document.querySelector(s);
-  const els={scene:$('#scene'),cut:$('#cut'),take:$('#take'),director:$('#director'),prod:$('#prod'),date:$('#date'),themeBtn:$('#themeToggle'),resetBtn:$('#resetCounts')};
+  const els={
+    scene:$('#scene'), cut:$('#cut'), take:$('#take'),
+    director:$('#director'), prod:$('#prod'), date:$('#date'),
+    themeBtn:$('#themeToggle'), resetBtn:$('#resetCounts')
+  };
 
+  const clamp=n=>Math.min(MAX,Math.max(MIN,n));
   const getVal=el=>Number(el.textContent)||MIN;
-  const setVal=(el,n)=>{const v=Math.max(MIN,Math.min(MAX,n));el.textContent=v;save();};
+
+  // 값 설정 + 저장 + 폰트 핏
+  const setVal=(el,n)=>{
+    const v=clamp(parseInt(n,10));
+    el.textContent=String(isNaN(v)?MIN:v);
+    save();
+    fitValue(el);
+  };
   const step=(el,d)=>setVal(el,getVal(el)+d);
 
-  const KEY='slate-scroll-v1';
+  // 로컬 스토리지
+  const KEY='slate-scroll-fit-v1';
   function save(){
-    const data={scene:getVal(els.scene),cut:getVal(els.cut),take:getVal(els.take),
-      director:els.director.value,prod:els.prod.value,date:els.date.value,
-      theme:document.body.classList.contains('theme-invert')?'invert':'default'};
-    localStorage.setItem(KEY,JSON.stringify(data));
+    const data={
+      scene:getVal(els.scene), cut:getVal(els.cut), take:getVal(els.take),
+      director:els.director.value||'', prod:els.prod.value||'', date:els.date.value||'',
+      theme:document.body.classList.contains('theme-invert')?'invert':'default'
+    };
+    try{ localStorage.setItem(KEY, JSON.stringify(data)); }catch(e){}
   }
   function load(){
     const raw=localStorage.getItem(KEY);
-    if(raw){try{const d=JSON.parse(raw);['scene','cut','take'].forEach(k=>setVal(els[k],d[k]||MIN));
-      els.director.value=d.director||'';els.prod.value=d.prod||'';els.date.value=d.date||'';
-      if(d.theme==='invert'){document.body.classList.add('theme-invert');els.themeBtn.setAttribute('aria-pressed','true');}
-    }catch(e){}}
+    if(raw){ try{
+      const d=JSON.parse(raw);
+      ['scene','cut','take'].forEach(k=> setVal(els[k], d[k]??MIN));
+      els.director.value=d.director||''; els.prod.value=d.prod||''; els.date.value=d.date||'';
+      if(d.theme==='invert'){
+        document.body.classList.add('theme-invert');
+        els.themeBtn.setAttribute('aria-pressed','true');
+      }
+    }catch(e){} }
+    // 날짜 기본값
+    if(!els.date.value){
+      const t=new Date(), m=String(t.getMonth()+1).padStart(2,'0'), da=String(t.getDate()).padStart(2,'0');
+      els.date.value = `${t.getFullYear()}-${m}-${da}`;
+    }
+    // 첫 렌더 후 전체 핏
+    fitAll();
   }
 
+  // 버튼 클릭
   document.querySelectorAll('.btn').forEach(btn=>{
-    const t=btn.dataset.target,delta=Number(btn.dataset.step),el=els[t];
+    const t=btn.dataset.target, delta=Number(btn.dataset.step), el=els[t];
     btn.addEventListener('click',()=>step(el,delta));
   });
 
+  // 테마 토글
   els.themeBtn.addEventListener('click',()=>{
     const inverted=document.body.classList.toggle('theme-invert');
-    els.themeBtn.setAttribute('aria-pressed',inverted?'true':'false');
+    els.themeBtn.setAttribute('aria-pressed', inverted?'true':'false');
     save();
   });
 
-  els.resetBtn.addEventListener('click',()=>['scene','cut','take'].forEach(k=>setVal(els[k],MIN)));
+  // 리셋
+  els.resetBtn.addEventListener('click',()=>{
+    ['scene','cut','take'].forEach(k=> setVal(els[k], MIN));
+  });
 
-  [els.director,els.prod,els.date].forEach(inp=>inp.addEventListener('input',save));
+  // ===== 숫자 자동 폰트 핏 =====
+  function fitValue(el){
+    // 레이아웃에서 valueBox가 가용폭을 제공
+    const box = el.parentElement;             // .valueBox
+    const maxWidth = box.clientWidth - 140;   // 좌우 버튼(각 56px) + 여백 감안 (보수적으로 140)
+    const maxHeight = box.parentElement.clientHeight * 0.7; // 셀 높이의 70% 정도를 최대 폰트 높이로
+
+    let size = Math.min(120, parseFloat(getComputedStyle(el).fontSize) || 96);
+    const minSize = 36;
+
+    // 먼저 크게 설정
+    el.style.fontSize = size + 'px';
+
+    // 줄여가며 맞춤 (최대 20회)
+    let guard = 20;
+    while(guard-- > 0 && (el.scrollWidth > maxWidth || el.scrollHeight > maxHeight) && size > minSize){
+      size -= 4;
+      el.style.fontSize = size + 'px';
+    }
+  }
+  function fitAll(){
+    [els.scene, els.cut, els.take].forEach(fitValue);
+  }
+
+  // 리사이즈/회전 시 재맞춤 (디바운스)
+  let rAF=null;
+  const onResize=()=>{ if(rAF) cancelAnimationFrame(rAF); rAF=requestAnimationFrame(fitAll); };
+  window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', onResize);
+
+  // 입력 변화 저장
+  [els.director, els.prod, els.date].forEach(inp=> inp.addEventListener('input', save));
 
   load();
 })();
