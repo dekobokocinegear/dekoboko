@@ -3,67 +3,60 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover" />
-<title>웹 슬레이트 (Scene / Cut / Take) – Adaptive Fullscreen + 모드 토글</title>
+<title>웹 슬레이트 (Scene / Cut / Take) – Adaptive Fullscreen Stretch</title>
 <style>
   :root{
-    --line:#fff;
-    --board:#000;
-    --label:#fff;
-    --value:#fff;
-    --btn-bg:transparent;
-    --btn-border:var(--line);
-    --btn-text:var(--label);
+    --line:#fff; --board:#000; --label:#fff; --value:#fff;
+    --btn-bg:transparent; --btn-border:var(--line); --btn-text:var(--label);
+    --btn-weak:#9ca3af; /* 옅은 회색 버튼 텍스트 */
     --focus-ring:rgba(127,127,127,.45);
-    --meta-h:96px;
   }
   .theme-invert{
-    --line:#000;
-    --board:#fff;
-    --label:#000;
-    --value:#000;
-    --btn-bg:transparent;
-    --btn-border:var(--line);
-    --btn-text:var(--label);
+    --line:#000; --board:#fff; --label:#000; --value:#000;
+    --btn-bg:transparent; --btn-border:var(--line); --btn-text:var(--label);
+    --btn-weak:#9ca3af; /* 밝은 테마에서도 동일한 연한 회색 */
     --focus-ring:rgba(0,0,0,.35);
   }
 
-  *{box-sizing:border-box}
-  body{margin:0; background:var(--board); color:var(--label);
-    font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,Helvetica,Arial,sans-serif; height:100svh; overflow:hidden;}
-  /* URL/툴바 변화 대응: 고정 스테이지 */
-  .wrap{position:fixed; inset:0; width:100svw; height:100svh; display:flex; justify-content:center; align-items:center; padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0);}
-  .slate{ background:var(--board); width:920px; height:600px; border-radius:12px; box-shadow:0 12px 40px rgba(0,0,0,.25); border:1px solid rgba(127,127,127,.35); overflow:hidden; transform-origin:0 0; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100svh;background:var(--board);color:var(--label);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Noto Sans KR,Helvetica,Arial,sans-serif;overflow:hidden}
 
-  .top{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 22px 12px; border-bottom:3px solid var(--line); font-weight:800; color:var(--label); letter-spacing:.02em;}
-  .brandToggle{ text-decoration:none; color:var(--btn-text); display:inline-block; padding:6px 10px; border:2px solid var(--btn-border); border-radius:10px; }
-  .controls{ display:flex; gap:8px; align-items:center; }
-  .themeBtn,.smallBtn{appearance:none; border:2px solid var(--btn-border); background:var(--btn-bg); color:var(--btn-text); padding:6px 10px; border-radius:10px; font-weight:800; cursor:pointer; line-height:1; white-space:nowrap;}
-  .themeBtn:focus-visible,.smallBtn:focus-visible{ outline:3px solid var(--focus-ring); outline-offset:2px; }
+  .wrap{width:100%;height:100svh;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
+  .slate{background:var(--board);width:100%;height:100%;border-radius:0;box-shadow:none;border:none;display:flex;flex-direction:column;}
 
-  .meta{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:0; border-bottom:3px solid var(--line); }
-  .meta .row{ display:flex; flex-direction:column; justify-content:stretch; padding:10px 12px; height:var(--meta-h); }
-  .meta label{ font:800 9px/1 var(--label); letter-spacing:.08em; margin-bottom:6px }
-  .meta input{ flex:1; min-width:0; background:transparent; color:var(--label); border:none; border-radius:0; font-size:16px; font-weight:800; padding:18px 0px; height:calc(var(--meta-h) - 36px); line-height:1.2; }
+  .top{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:clamp(8px,1.2vw,18px);padding:clamp(8px,2vh,22px) clamp(10px,3vw,28px) clamp(6px,1.5vh,16px);border-bottom:3px solid var(--line);font-weight:800;color:var(--label);letter-spacing:.02em;}
+  .brandToggle{text-decoration:none;color:var(--btn-text);padding:clamp(4px,0.8vh,8px) clamp(8px,1.2vw,12px);border:2px solid var(--btn-border);border-radius:10px;}
+  .controls{display:flex;gap:clamp(6px,1vw,12px);align-items:center;}
+  .themeBtn,.smallBtn{appearance:none;border:2px solid var(--btn-border);background:var(--btn-bg);color:var(--btn-text);padding:clamp(4px,0.8vh,8px) clamp(8px,1.2vw,12px);border-radius:10px;font-weight:800;cursor:pointer;line-height:1;white-space:nowrap;font-size:clamp(12px,1.4vw,16px);} 
+  .themeBtn:focus-visible,.smallBtn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
 
-  .grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:0; }
-  .cell{ padding:18px 18px 22px; border-right:3px solid var(--line); border-bottom:3px solid var(--line); min-height:148px; display:flex; flex-direction:column; gap:12px; align-items:center; }
+  /* 메타: 내부 칸 구분선 제거(요청 사항) */
+  .meta{flex:0 0 clamp(90px,15vh,160px);display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:3px solid var(--line);} 
+  .meta .row{display:flex;flex-direction:column;justify-content:center;padding:clamp(8px,1vh,12px) clamp(10px,2vw,16px);} 
+  .meta label{font:800 clamp(10px,1.2vw,14px)/1 var(--label);letter-spacing:.08em;margin-bottom:4px}
+  .meta input{flex:1;background:transparent;color:var(--label);border:none;font-size:clamp(14px,2vw,24px);font-weight:800;padding:0;min-width:0;}
+  .meta input::placeholder{color:#9ca3af;opacity:.9;font-weight:800}
+  input[type="date"]{-webkit-appearance:none;appearance:none;}
+
+  .grid{flex:1;display:grid;grid-template-columns:repeat(3,1fr);} 
+  .cell{padding:clamp(10px,2.2vh,24px);border-right:3px solid var(--line);border-bottom:3px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,1.4vh,16px);} 
   .cell:last-child{border-right:none;}
 
-  .label{ font-size:28px; font-weight:900; color:var(--label); letter-spacing:.12em; }
-  .valueBox{ display:flex; flex-direction:column; align-items:center; gap:10px; }
-  .value{ border:none; border-radius:0; padding:20px 14px; min-width:140px; text-align:center; font-weight:900; font-size:96px; line-height:1; color:var(--value); user-select:none; cursor:pointer; outline:none; }
+  .label{font-size:clamp(18px,3vw,32px);font-weight:900;color:var(--label);letter-spacing:.12em;}
+  
+  /* === 버튼을 숫자 좌우 배치 === */
+  .valueBox{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:clamp(10px,2.4vw,24px);} 
+  .value{border:none;padding:clamp(8px,2vh,28px);width:auto;min-width:clamp(80px,12vw,200px);text-align:center;font-weight:900;font-size:clamp(56px,12vw,140px);line-height:1;color:var(--value);user-select:none;cursor:pointer;outline:none;}
 
-  .btnRow{ display:flex; align-items:center; justify-content:center; gap:12px; }
-  .btn{ appearance:none; border:none; background:var(--btn-bg); color:var(--btn-text); width:56px; height:56px; border-radius:12px; font-size:28px; font-weight:900; cursor:pointer; touch-action:manipulation; }
+  .inlineInput{width:60%;text-align:center;font-weight:900;font-size:clamp(40px,10vw,120px);padding:clamp(6px,1.8vh,18px);background:transparent;color:var(--value);border:2px solid var(--line);} 
 
-  @media (max-width:700px){
-    .grid{ grid-template-columns:1fr; }
-    .cell{ border-right:none; }
-    .label{ font-size:22px; }
-    .value{ font-size:72px; }
-    .meta{ grid-template-columns:1fr; }
-    .meta .row{ border-bottom:3px solid var(--line); }
-    .meta .row:last-child{ border-bottom:none; }
+  .btn{appearance:none;border:2px solid transparent;background:var(--btn-bg);color:var(--btn-weak);width:clamp(48px,10vw,90px);height:clamp(48px,10vw,90px);border-radius:12px;font-size:clamp(24px,6vw,56px);font-weight:900;cursor:pointer;touch-action:manipulation;}
+  .btn:active{transform:translateY(1px);} 
+  .btn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
+
+  @media (orientation:portrait){
+    .meta{flex:0 0 clamp(120px,20vh,220px);grid-template-columns:1fr;} /* 한 열로 */
+    .grid{grid-template-columns:1fr;} /* 한 열로 */
   }
 </style>
 </head>
@@ -73,9 +66,8 @@
       <div class="top">
         <a class="brandToggle" href="https://smartstore.naver.com/dekoboko" target="_blank" rel="noopener">DEKOBOKO</a>
         <div class="controls">
-          <button class="smallBtn" id="resetCounts">↺ 리셋</button>
-          <button class="themeBtn" id="themeToggle" aria-pressed="false">◐ 색상반전</button>
-          <button class="themeBtn" id="scaleToggle" aria-pressed="false">⬒ 꽉채움</button>
+          <button class="smallBtn" id="resetCounts" aria-label="Scene/Cut/Take 값 초기화">↺ 리셋</button>
+          <button class="themeBtn" id="themeToggle" aria-pressed="false" aria-label="흑백 반전 테마 토글">◐ 색상반전</button>
         </div>
       </div>
 
@@ -95,61 +87,94 @@
       </div>
 
       <div class="grid">
-        <div class="cell"><div class="label">SCENE</div><div class="valueBox"><div class="value" id="scene">1</div><div class="btnRow"><button class="btn" data-target="scene" data-step="-1">−</button><button class="btn" data-target="scene" data-step="1">+</button></div></div></div>
-        <div class="cell"><div class="label">CUT</div><div class="valueBox"><div class="value" id="cut">1</div><div class="btnRow"><button class="btn" data-target="cut" data-step="-1">−</button><button class="btn" data-target="cut" data-step="1">+</button></div></div></div>
-        <div class="cell"><div class="label">TAKE</div><div class="valueBox"><div class="value" id="take">1</div><div class="btnRow"><button class="btn" data-target="take" data-step="-1">−</button><button class="btn" data-target="take" data-step="1">+</button></div></div></div>
+        <div class="cell">
+          <div class="label">SCENE</div>
+          <div class="valueBox">
+            <button class="btn" data-target="scene" data-step="-1" aria-label="Scene 감소">−</button>
+            <div class="value" id="scene" tabindex="0" role="spinbutton" aria-label="Scene number" aria-valuemin="1" aria-valuemax="100" aria-valuenow="1">1</div>
+            <button class="btn" data-target="scene" data-step="1" aria-label="Scene 증가">+</button>
+          </div>
+        </div>
+        <div class="cell">
+          <div class="label">CUT</div>
+          <div class="valueBox">
+            <button class="btn" data-target="cut" data-step="-1" aria-label="Cut 감소">−</button>
+            <div class="value" id="cut" tabindex="0" role="spinbutton" aria-label="Cut number" aria-valuemin="1" aria-valuemax="100" aria-valuenow="1">1</div>
+            <button class="btn" data-target="cut" data-step="1" aria-label="Cut 증가">+</button>
+          </div>
+        </div>
+        <div class="cell">
+          <div class="label">TAKE</div>
+          <div class="valueBox">
+            <button class="btn" data-target="take" data-step="-1" aria-label="Take 감소">−</button>
+            <div class="value" id="take" tabindex="0" role="spinbutton" aria-label="Take number" aria-valuemin="1" aria-valuemax="100" aria-valuenow="1">1</div>
+            <button class="btn" data-target="take" data-step="1" aria-label="Take 증가">+</button>
+          </div>
+        </div>
       </div>
     </section>
   </div>
 
 <script>
 (function(){
-  const slate=document.querySelector('.slate');
-  const scaleBtn=document.getElementById('scaleToggle');
+  const MIN=1, MAX=100;
+  const $=(s, r=document)=>r.querySelector(s);
+  const els={scene:$('#scene'),cut:$('#cut'),take:$('#take'),director:$('#director'),prod:$('#prod'),date:$('#date'),themeBtn:$('#themeToggle'),resetBtn:$('#resetCounts')};
+  const clampWrap=n=>n>MAX?MIN:n<MIN?MAX:n;
+  const getVal=el=>Number(el.textContent)||MIN;
+  const setVal=(el,n)=>{const v=clampWrap(parseInt(n,10)||MIN);el.textContent=String(v);el.setAttribute('aria-valuenow',String(v));save();};
+  const step=(el,d)=>setVal(el,getVal(el)+d);
 
-  const BASE_W=920, BASE_H=600;
-
-  function metrics(){
-    // iOS Safari URL/툴바 변화를 반영하는 작은 뷰포트 기준 사용
-    const vw = (window.visualViewport? visualViewport.width : window.innerWidth);
-    const vh = (window.visualViewport? visualViewport.height: window.innerHeight);
-    return {vw, vh};
+  const KEY='slate-state-adaptive-stretch-v2';
+  function save(){
+    const data={scene:getVal(els.scene),cut:getVal(els.cut),take:getVal(els.take),director:els.director.value||'',prod:els.prod.value||'',date:els.date.value||'',theme:document.body.classList.contains('theme-invert')?'invert':'default'};
+    try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){}
+  }
+  function load(){
+    const raw=localStorage.getItem(KEY);
+    if(raw){try{const d=JSON.parse(raw);['scene','cut','take'].forEach(k=>setVal(els[k],d[k]||MIN));els.director.value=d.director||'';els.prod.value=d.prod||'';els.date.value=d.date||'';if(d.theme==='invert'){document.body.classList.add('theme-invert');els.themeBtn.setAttribute('aria-pressed','true');}}catch(e){}}
+    if(!els.date.value){const t=new Date();const m=String(t.getMonth()+1).padStart(2,'0');const da=String(t.getDate()).padStart(2,'0');els.date.value=`${t.getFullYear()}-${m}-${da}`;}
   }
 
-  function applyScale(){
-    const {vw, vh} = metrics();
-    const stretch = document.body.classList.contains('stretch-mode');
+  [els.director,els.prod,els.date].forEach(inp=>{inp.addEventListener('input',save);inp.addEventListener('change',save);});
 
-    if(stretch){
-      // 가로/세로 독립 스케일 + 중앙 정렬 보정 (클리핑 방지)
-      const sx = vw / BASE_W; const sy = vh / BASE_H;
-      const tx = (vw - BASE_W * sx) / 2;  // 남는 영역을 절반씩 분배
-      const ty = (vh - BASE_H * sy) / 2;
-      slate.style.transform = `translate(${tx}px, ${ty}px) scale(${sx}, ${sy})`;
-    }else{
-      // 비율 유지 스케일 + 중앙 정렬
-      const s  = Math.min(vw / BASE_W, vh / BASE_H);
-      const tx = (vw - BASE_W * s) / 2;
-      const ty = (vh - BASE_H * s) / 2;
-      slate.style.transform = `translate(${tx}px, ${ty}px) scale(${s})`;
-    }
-  }
-
-  function rafApply(){ cancelAnimationFrame(rafApply._id); rafApply._id = requestAnimationFrame(applyScale); }
-
-  ['resize','orientationchange'].forEach(ev=> window.addEventListener(ev, rafApply));
-  if(window.visualViewport){ ['resize','scroll'].forEach(ev=> visualViewport.addEventListener(ev, rafApply)); }
-
-  // 토글 버튼: 모드 전환(꽉채움 ↔ 비율유지)
-  scaleBtn && scaleBtn.addEventListener('click', ()=>{
-    const stretch=document.body.classList.toggle('stretch-mode');
-    scaleBtn.textContent = stretch ? '⬒ 비율유지' : '⬒ 꽉채움';
-    rafApply();
+  // 증감 버튼 (휠/드래그 변경 불가 유지)
+  document.querySelectorAll('.btn').forEach(btn=>{
+    const targetId=btn.dataset.target;const delta=Number(btn.dataset.step);const targetEl=els[targetId];
+    let timer=null, rep=null; const REPEAT_DELAY=400, REPEAT_RATE=120;
+    const clearTimers=()=>{ if(timer){clearTimeout(timer);timer=null;} if(rep){clearInterval(rep);rep=null;} };
+    const press=()=>{ step(targetEl,delta); timer=setTimeout(()=>{ rep=setInterval(()=> step(targetEl,delta), REPEAT_RATE); }, REPEAT_DELAY); };
+    const release=()=> clearTimers();
+    btn.addEventListener('click',()=>step(targetEl,delta));
+    btn.addEventListener('pointerdown',press);
+    btn.addEventListener('pointerup',release);
+    btn.addEventListener('pointerleave',release);
+    btn.addEventListener('pointercancel',release);
   });
 
-  // 초기 적용 (연속 2회로 iOS 레이아웃 지연 보정)
-  rafApply();
-  setTimeout(rafApply, 50);
+  // 숫자 직접 입력: 더블클릭(모바일은 빠른 탭 2회)
+  ;[els.scene,els.cut,els.take].forEach(el=>{
+    let lastTap=0; el.addEventListener('click',()=>{const now=Date.now(); if(now-lastTap<300){ startInlineInput(el); } lastTap=now;});
+    el.addEventListener('dblclick',()=> startInlineInput(el));
+  });
+  function startInlineInput(el){
+    const cur=getVal(el); const input=document.createElement('input');
+    input.type='number'; input.className='inlineInput'; input.min=String(MIN); input.max=String(MAX); input.value=String(cur);
+    el.replaceWith(input); input.focus({preventScroll:true}); input.select();
+    const commit=()=>{ const v=clampWrap(parseInt(input.value,10)||cur); const restored=document.createElement('div'); restored.className='value'; restored.id=el.id; restored.tabIndex=0; restored.role='spinbutton'; restored.setAttribute('aria-label',el.getAttribute('aria-label')||'number'); restored.setAttribute('aria-valuemin',String(MIN)); restored.setAttribute('aria-valuemax',String(MAX)); restored.textContent=String(v); input.parentElement.replaceChild(restored,input); attachInline(restored); setVal(restored,v); };
+    const cancel=()=>{ input.value=String(cur); commit(); };
+    input.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();commit();} if(e.key==='Escape'){e.preventDefault();cancel();} });
+    input.addEventListener('blur',commit);
+  }
+  function attachInline(el){ let lastTap=0; el.addEventListener('click',()=>{const now=Date.now(); if(now-lastTap<300){ startInlineInput(el); } lastTap=now;}); el.addEventListener('dblclick',()=> startInlineInput(el)); }
+
+  // 테마 토글
+  els.themeBtn.addEventListener('click',()=>{const inverted=document.body.classList.toggle('theme-invert');els.themeBtn.setAttribute('aria-pressed',inverted?'true':'false');save();});
+
+  // 리셋
+  els.resetBtn.addEventListener('click',()=>{['scene','cut','take'].forEach(k=>setVal(els[k],MIN));});
+
+  load();
 })();
 </script>
 </body>
