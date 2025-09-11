@@ -5,15 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover" />
 <title>DEKOBOKO SLATE</title>
 <style>
-  :root{
-    --line:#fff; --board:#000; --label:#fff; --value:#fff;
-    --btn-bg:transparent; --btn-border:var(--line); --btn-text:var(--label);
-    --focus-ring:rgba(127,127,127,.45);
-    --scroll-nudge:0px;
-  }
+  :root{--line:#fff;--board:#000;--label:#fff;--value:#fff;--btn-bg:rgba(255,255,255,.08);--btn-border:var(--line);--btn-text:var(--label);--focus-ring:rgba(127,127,127,.45);--scroll-nudge:0px;}
   @media (pointer:coarse){ :root{ --scroll-nudge:96px; } }
 
-  .theme-invert{ --line:#000; --board:#fff; --label:#000; --value:#000; }
+  .theme-invert{--line:#000;--board:#fff;--label:#000;--value:#000;--btn-bg:rgba(0,0,0,.08);--btn-border:var(--line);--btn-text:var(--label);}
 
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{
@@ -27,11 +22,11 @@
   .slate{background:var(--board);width:100vw;max-width:none;min-height:100dvh;border:none;display:flex;flex-direction:column;}
 
   .top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;border-bottom:3px solid var(--line);font-weight:800;}
-  .brandToggle{color:var(--btn-text);text-decoration:none;padding:6px 10px;border:2px solid var(--btn-border);border-radius:10px;}
+  .brandToggle{color:var(--btn-text);text-decoration:none;padding:6px 10px;border:2px solid var(--btn-border);border-radius:10px;background:var(--btn-bg);transition:background .15s ease,border-color .15s ease;}.brandToggle:hover{background:color-mix(in srgb, var(--btn-bg) 60%, transparent);}
   .midHint{flex:1;text-align:center;font-weight:300;font-size:10px;opacity:.7;letter-spacing:.02em;white-space:nowrap;}
   .controls{display:flex;gap:8px;}
-  .themeBtn,.smallBtn{border:2px solid var(--btn-border);background:var(--btn-bg);color:var(--btn-text);padding:6px 10px;border-radius:10px;font-weight:800;cursor:pointer;}
-  .themeBtn:focus-visible,.smallBtn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}
+  .themeBtn,.smallBtn{border:2px solid var(--btn-border);background:var(--btn-bg);color:var(--btn-text);padding:6px 10px;border-radius:10px;font-weight:800;cursor:pointer;transition:background .15s ease,border-color .15s ease;}
+  .themeBtn:focus-visible,.smallBtn:focus-visible{outline:3px solid var(--focus-ring);outline-offset:2px;}.themeBtn:hover,.smallBtn:hover{background:color-mix(in srgb, var(--btn-bg) 60%, transparent);}
 
   .meta{display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:3px solid var(--line);}
   .meta .row{display:flex;flex-direction:column;padding:10px;}
