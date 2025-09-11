@@ -39,7 +39,9 @@
     padding:18px 22px 12px; border-bottom:3px solid var(--line);
     font-weight:800; color:var(--label); letter-spacing:.02em;
   }
-  .brand{ font-weight:800; letter-spacing:.08em; }
+  $1
+  .brandToggle{ text-decoration:none; color:var(--btn-text); } .brandToggle:focus-visible{ outline:3px solid var(--focus-ring); outline-offset:2px; }
+  .brandBtn:focus-visible{ outline:3px solid var(--focus-ring); outline-offset:2px; }
   .controls{ display:flex; gap:8px; align-items:center; }
   .themeBtn{
     appearance:none; border:2px solid var(--btn-border); background:var(--btn-bg);
@@ -51,8 +53,8 @@
   .meta{ display:grid; grid-template-columns: 1fr 1fr 1fr; gap:0; border-bottom:3px solid var(--line); }
   .meta .row{ display:flex; flex-direction:column; justify-content:stretch; padding:10px 12px; border-right:3px solid var(--line); box-sizing:border-box; }
   .meta .row:last-child{border-right:none;}
-  .meta label{ font:800 13px/1 var(--label); letter-spacing:.08em; margin-bottom:6px }
-  .meta input{ flex:1; min-width:0; background:var(--board); color:var(--label); border:none; border-radius:0; font-size:14px; font-weight:800; padding:6px 8px; box-sizing:border-box; }
+  $19px$2 letter-spacing:.08em; margin-bottom:6px }
+  $128px$2
   .meta input::placeholder{color:#9ca3af; opacity:.9; font-weight:800}
 
   .grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:0; }
@@ -76,7 +78,7 @@
 
   .btnRow{ display:flex; align-items:center; justify-content:center; gap:12px; }
   .btn{
-    appearance:none; border:2px solid var(--btn-border); background:var(--btn-bg);
+    appearance:none; border:none; background:var(--btn-bg);
     color:var(--btn-text); width:52px; height:52px; border-radius:12px;
     font-size:28px; font-weight:900; line-height:1; cursor:pointer;
   }
@@ -98,9 +100,9 @@
   <div class="wrap">
     <section class="slate" aria-label="영화 촬영 슬레이트">
       <div class="top">
-        <div class="brand">DEKOBOKO</div>
+        <a class="themeBtn brandToggle" href="https://smartstore.naver.com/dekoboko" target="_blank" rel="noopener" aria-label="DEKOBOKO 스토어로 이동">DEKOBOKO</a>
         <div class="controls">
-          <button class="themeBtn" id="themeToggle" aria-pressed="false" aria-label="흑백 반전 테마 토글">◐ Invert</button>
+          <button class="themeBtn" id="themeToggle" aria-pressed="false" aria-label="흑백 반전 테마 토글">◐ 색상반전</button>
         </div>
       </div>
 
@@ -233,7 +235,7 @@
         case 'End': e.preventDefault(); setVal(el,MAX); break;
       }
     });
-    // 더블탭/더블클릭 → 직접 입력
+    // 더블탭제스처/더블클릭 → 직접 입력
     addDirectInput(el);
   });
 
@@ -317,3 +319,4 @@
 </script>
 </body>
 </html>
+
