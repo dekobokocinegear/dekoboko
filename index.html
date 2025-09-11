@@ -29,7 +29,8 @@
   .value{ border:none; border-radius:0; padding:20px 14px; min-width:140px; text-align:center; font-weight:900; font-size:96px; line-height:1; color:var(--value); user-select:none; cursor:pointer; outline:none; touch-action:none; }
   .value:focus{ box-shadow:none; }
 
-  /* 가운데 정렬된 ± 버튼 */
+  .inlineInput{ width:160px; text-align:center; font-weight:900; font-size:72px; padding:10px 8px; background:#111; color:#fff; border:2px solid #fff; }
+
   .btnRow{ display:flex; align-items:center; justify-content:center; gap:12px; }
   .btn{ appearance:none; border:none; background:transparent; color:#fff; width:52px; height:52px; border-radius:12px; font-size:28px; font-weight:900; line-height:1; cursor:pointer; }
   .btn:active{ transform:translateY(1px); }
@@ -80,20 +81,20 @@
         <div class="cell">
           <div class="label">CUT</div>
           <div class="valueBox">
-            <div class="value" id="take" tabindex="0" role="spinbutton" aria-label="Cut number" aria-valuemin="1" aria-valuemax="100" aria-valuenow="1">1</div>
+            <div class="value" id="cut" tabindex="0" role="spinbutton" aria-label="Cut number" aria-valuemin="1" aria-valuemax="100" aria-valuenow="1">1</div>
             <div class="btnRow">
-              <button class="btn" data-target="take" data-step="-1" aria-label="Cut 감소">−</button>
-              <button class="btn" data-target="take" data-step="1" aria-label="Cut 증가">+</button>
+              <button class="btn" data-target="cut" data-step="-1" aria-label="Cut 감소">−</button>
+              <button class="btn" data-target="cut" data-step="1" aria-label="Cut 증가">+</button>
             </div>
           </div>
         </div>
         <div class="cell">
           <div class="label">TAKE</div>
           <div class="valueBox">
-            <div class="value" id="roll" tabindex="0" role="spinbutton" aria-label="Take number" aria-valuemin="1" aria-valuemax="100" aria-valuenow="1">1</div>
+            <div class="value" id="take" tabindex="0" role="spinbutton" aria-label="Take number" aria-valuemin="1" aria-valuemax="100" aria-valuenow="1">1</div>
             <div class="btnRow">
-              <button class="btn" data-target="roll" data-step="-1" aria-label="Take 감소">−</button>
-              <button class="btn" data-target="roll" data-step="1" aria-label="Take 증가">+</button>
+              <button class="btn" data-target="take" data-step="-1" aria-label="Take 감소">−</button>
+              <button class="btn" data-target="take" data-step="1" aria-label="Take 증가">+</button>
             </div>
           </div>
         </div>
@@ -104,21 +105,87 @@
 <script>
 (function(){
   const MIN=1, MAX=100;
-  const els={scene:document.getElementById('scene'), take:document.getElementById('take'), roll:document.getElementById('roll')};
+  const $ = (s, r=document)=>r.querySelector(s);
+  const els={
+    scene:$('#scene'),
+    cut:$('#cut'),
+    take:$('#take'),
+    director:$('#director'),
+    prod:$('#prod'),
+    date:$('#date')
+  };
 
+  // ---- 값 보정 & 상태 저장 ----
   const clampWrap=n=>n>MAX?MIN:n<MIN?MAX:n;
   const getVal=el=>Number(el.textContent)||MIN;
-  const setVal=(el,n)=>{ const v=clampWrap(parseInt(n,10)||MIN); el.textContent=String(v); el.setAttribute('aria-valuenow',String(v)); };
+  const setVal=(el,n)=>{
+    const v=clampWrap(parseInt(n,10)||MIN);
+    el.textContent=String(v);
+    el.setAttribute('aria-valuenow',String(v));
+    save();
+  };
   const step=(el,d)=>setVal(el, getVal(el)+d);
 
-  // 스크롤 증감
-  Object.values(els).forEach(el=>{
-    el.addEventListener('wheel', e=>{ e.preventDefault(); const dir = e.deltaY<0?+1:-1; const amt = e.shiftKey?10:1; step(el, dir*amt); }, {passive:false});
+  // ---- localStorage ----
+  const KEY='slate-state-v2';
+  function save(){
+    const data={
+      scene:getVal(els.scene),
+      cut:getVal(els.cut),
+      take:getVal(els.take),
+      director:els.director.value||'',
+      prod:els.prod.value||'',
+      date:els.date.value||''
+    };
+    localStorage.setItem(KEY, JSON.stringify(data));
+  }
+  function load(){
+    const raw=localStorage.getItem(KEY);
+    if(raw){
+      try{
+        const d=JSON.parse(raw);
+        ['scene','cut','take'].forEach(k=> setVal(els[k], d[k]??MIN));
+        els.director.value=d.director||'';
+        els.prod.value=d.prod||'';
+        els.date.value=d.date||'';
+      }catch(e){}
+    }
+    // 오늘 날짜 기본값(비어있을 때만)
+    if(!els.date.value){
+      const t=new Date();
+      const m=String(t.getMonth()+1).padStart(2,'0');
+      const da=String(t.getDate()).padStart(2,'0');
+      els.date.value = `${t.getFullYear()}-${m}-${da}`;
+    }
+  }
+
+  // ---- 메타 입력 저장 ----
+  [els.director, els.prod, els.date].forEach(inp=>{
+    inp.addEventListener('input', save);
+    inp.addEventListener('change', save);
+  });
+
+  // ---- 스크롤 / 드래그 / 키보드 ----
+  [els.scene, els.cut, els.take].forEach(el=>{
+    // 마우스 휠
+    el.addEventListener('wheel', e=>{
+      e.preventDefault();
+      const dir = e.deltaY<0?+1:-1;
+      const amt = e.shiftKey?10:1;
+      step(el, dir*amt);
+    }, {passive:false});
 
     // 터치 드래그 (30px당 1단계)
     let startY=null, pid=null; const threshold=30;
-    el.addEventListener('pointerdown', e=>{ if(e.pointerType==='touch'){ startY=e.clientY; pid=e.pointerId; el.setPointerCapture(pid);} });
-    el.addEventListener('pointermove', e=>{ if(startY==null||e.pointerId!==pid) return; const dy=e.clientY-startY; const steps=Math.trunc(dy/threshold); if(steps){ step(el,-steps); startY=startY+steps*threshold; } });
+    el.addEventListener('pointerdown', e=>{
+      if(e.pointerType==='touch'){ startY=e.clientY; pid=e.pointerId; el.setPointerCapture(pid); }
+    });
+    el.addEventListener('pointermove', e=>{
+      if(startY==null||e.pointerId!==pid) return;
+      const dy=e.clientY-startY;
+      const steps=Math.trunc(dy/threshold);
+      if(steps){ step(el,-steps); startY=startY+steps*threshold; }
+    });
     el.addEventListener('pointerup', ()=>{ startY=null; pid=null; });
 
     // 키보드
@@ -132,14 +199,115 @@
         case 'End': e.preventDefault(); setVal(el,MAX); break;
       }
     });
+
+    // 더블클릭/더블탭 → 직접 입력
+    addDirectInput(el);
   });
 
-  // ± 버튼 클릭(가운데 배치)
+  // ---- ± 버튼 ----
   document.querySelectorAll('.btn').forEach(btn=>{
-    const targetId = btn.dataset.target; const delta = Number(btn.dataset.step);
+    const targetId = btn.dataset.target;
+    const delta = Number(btn.dataset.step);
     const targetEl = els[targetId];
     btn.addEventListener('click', ()=> step(targetEl, delta));
   });
+
+  // ---- 더블탭 감지 & 인라인 입력기 ----
+  function addDirectInput(el){
+    let lastTap=0;
+    el.addEventListener('click', (e)=>{
+      const now=Date.now();
+      if(now-lastTap<300){ startInlineInput(el); }
+      lastTap=now;
+    });
+    el.addEventListener('dblclick', ()=> startInlineInput(el)); // 데스크톱
+  }
+
+  function startInlineInput(el){
+    const cur=getVal(el);
+    const input=document.createElement('input');
+    input.type='number';
+    input.className='inlineInput';
+    input.min=String(MIN);
+    input.max=String(MAX);
+    input.value=String(cur);
+    el.replaceWith(input);
+    input.focus();
+    input.select();
+
+    const commit=()=>{
+      const v = clampWrap(parseInt(input.value,10)||cur);
+      const restored = document.createElement('div');
+      restored.className='value';
+      restored.id = el.id;
+      restored.tabIndex=0;
+      restored.role='spinbutton';
+      restored.setAttribute('aria-label', el.getAttribute('aria-label')||'number');
+      restored.setAttribute('aria-valuemin', String(MIN));
+      restored.setAttribute('aria-valuemax', String(MAX));
+      restored.textContent=String(v);
+      input.parentElement.replaceChild(restored, input);
+      // 이벤트 재바인딩
+      addDirectInput(restored);
+      // 공통 동작들 다시 연결
+      ['wheel','pointerdown','pointermove','pointerup','keydown'].forEach(()=>{});
+      // 편하게 재사용: 다시 초기화 루틴에 태워줌
+      rebindValue(restored);
+      save();
+    };
+    const cancel=()=>{
+      // 변경 없이 복구
+      input.value=String(cur);
+      commit();
+    };
+
+    input.addEventListener('keydown', e=>{
+      if(e.key==='Enter'){ e.preventDefault(); commit(); }
+      if(e.key==='Escape'){ e.preventDefault(); cancel(); }
+    });
+    input.addEventListener('blur', commit);
+  }
+
+  function rebindValue(el){
+    // 새로 만들어진 .value에도 동일 동작 부여
+    const bind = (el=>{
+      // wheel
+      el.addEventListener('wheel', e=>{
+        e.preventDefault();
+        const dir = e.deltaY<0?+1:-1;
+        const amt = e.shiftKey?10:1;
+        setVal(el, getVal(el)+dir*amt);
+      }, {passive:false});
+      // touch drag
+      let startY=null, pid=null; const threshold=30;
+      el.addEventListener('pointerdown', e=>{
+        if(e.pointerType==='touch'){ startY=e.clientY; pid=e.pointerId; el.setPointerCapture(pid); }
+      });
+      el.addEventListener('pointermove', e=>{
+        if(startY==null||e.pointerId!==pid) return;
+        const dy=e.clientY-startY;
+        const steps=Math.trunc(dy/threshold);
+        if(steps){ setVal(el, getVal(el)-steps); startY=startY+steps*threshold; }
+      });
+      el.addEventListener('pointerup', ()=>{ startY=null; pid=null; });
+      // keyboard
+      el.addEventListener('keydown', e=>{
+        switch(e.key){
+          case 'ArrowUp': e.preventDefault(); setVal(el, getVal(el)+1); break;
+          case 'ArrowDown': e.preventDefault(); setVal(el, getVal(el)-1); break;
+          case 'PageUp': e.preventDefault(); setVal(el, getVal(el)+10); break;
+          case 'PageDown': e.preventDefault(); setVal(el, getVal(el)-10); break;
+          case 'Home': e.preventDefault(); setVal(el,MIN); break;
+          case 'End': e.preventDefault(); setVal(el,MAX); break;
+        }
+      });
+      addDirectInput(el);
+    });
+    bind(el);
+  }
+
+  // 초기 로드
+  load();
 })();
 </script>
 </body>
